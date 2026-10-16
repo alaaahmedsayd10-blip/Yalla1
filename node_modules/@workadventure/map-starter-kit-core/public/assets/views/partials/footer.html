@@ -1,0 +1,48 @@
+<div class="bg"></div>
+{{> error-popup}}
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">Working on it...</p>
+    </div>
+</div>
+<script>
+    (function() {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+
+        function showLoadingOverlay(message) {
+            if (!loadingOverlay || !loadingText) {
+                return;
+            }
+            loadingText.textContent = message || 'Working on it...';
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoadingOverlay() {
+            if (!loadingOverlay) {
+                return;
+            }
+            loadingOverlay.style.display = 'none';
+        }
+
+        function isSaasMapStorageUrl(value) {
+            const regex = /^https:\/\/[a-zA-Z0-9.-]+\.map-storage\.workadventu\.re\/?$/;
+            return regex.test(String(value || '').trim());
+        }
+
+        function getPostPublishRedirect(mapStorageUrl) {
+            if (!mapStorageUrl) {
+                return '/step4-validated';
+            }
+            return isSaasMapStorageUrl(mapStorageUrl)
+                ? '/step4-validated'
+                : '/step4-validated-selfhosted';
+        }
+
+        window.showLoadingOverlay = showLoadingOverlay;
+        window.hideLoadingOverlay = hideLoadingOverlay;
+        window.isSaasMapStorageUrl = isSaasMapStorageUrl;
+        window.getPostPublishRedirect = getPostPublishRedirect;
+    })();
+</script>

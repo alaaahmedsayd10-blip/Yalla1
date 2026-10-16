@@ -1,0 +1,43 @@
+<div id="errorPopup" class="error-popup" style="display: none;">
+    <div class="error-popup-content">
+        <div class="error-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h3 class="error-title">Error</h3>
+        <pre id="errorMessage" class="error-message"></pre>
+        <button id="errorCloseButton" class="btn btn-secondary error-close-btn">Close</button>
+    </div>
+</div>
+<script>
+    (function() {
+        const errorPopup = document.getElementById('errorPopup');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorCloseButton = document.getElementById('errorCloseButton');
+
+        if (!errorPopup || !errorMessage || !errorCloseButton) {
+            return;
+        }
+
+        function showErrorPopup(message) {
+            errorMessage.textContent = message;
+            errorPopup.style.display = 'flex';
+        }
+
+        function hideErrorPopup() {
+            errorPopup.style.display = 'none';
+        }
+
+        window.showErrorPopup = showErrorPopup;
+        window.hideErrorPopup = hideErrorPopup;
+
+        errorCloseButton.addEventListener('click', hideErrorPopup);
+        errorPopup.addEventListener('click', function(e) {
+            if (e.target === errorPopup) {
+                hideErrorPopup();
+            }
+        });
+    })();
+</script>

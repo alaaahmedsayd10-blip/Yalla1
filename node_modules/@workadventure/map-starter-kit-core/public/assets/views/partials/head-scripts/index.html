@@ -1,0 +1,8 @@
+    <script type="module">
+        document.addEventListener("DOMContentLoaded", () => {
+            import('/public/assets/js/index.js').then((module) => {
+                module.loadTMJ();
+                module.setupPublishingActions();
+            });
+        });
+    </script>

@@ -1,0 +1,102 @@
+    <script type="module">
+        document.addEventListener("DOMContentLoaded", async () => {
+            const module = await import('/public/assets/js/index.js');
+            const main = document.querySelector('main .maps-container');
+            const emptyEl = document.getElementById('maps-empty');
+            const errorEl = document.getElementById('maps-error');
+            const loadingEl = document.getElementById('maps-loading');
+
+            try {
+                const response = await fetch('/uploader/maps-storage-list');
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.message || `HTTP ${response.status}`);
+                }
+                const { maps, mapStorageUrl, playBaseUrl } = await response.json();
+
+                loadingEl.style.display = 'none';
+
+                if (!maps || maps.length === 0) {
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+
+                // Maps are already hydrated by the API (path, mapName, mapDescription, mapImage, mapUrl, etc.)
+                // Play URL: use PLAY_BASE_URL if set, else derive from map-storage URL (replace "map-storage" by "play")
+                // Note: replacing "map-storage" by "play" is a convention for self-hosted setups, but could absolutely
+                // not work in some cases (e.g. if play and map-storage are on different domains or if the URL structure is different).
+                let playBase = (playBaseUrl && playBaseUrl.trim())
+                    ? playBaseUrl.replace(/\/$/, '')+"/"
+                    : undefined;
+                if (playBase === undefined) {
+                    const mapStorageUrlObj = new URL(mapStorageUrl || '', window.location.origin);
+                    if (mapStorageUrlObj.hostname.startsWith('map-storage')) {
+                        mapStorageUrlObj.hostname = mapStorageUrlObj.hostname.replace('map-storage', 'play');
+                        mapStorageUrlObj.pathname = '/';
+                    } else {
+                        mapStorageUrlObj.pathname = mapStorageUrlObj.pathname.replace('/map-storage', '');
+                    }
+                    playBase = mapStorageUrlObj.toString();
+                }
+                const defaultImageUrl = '/public/images/unknown-room-image.png';
+
+                maps.forEach(map => {
+                    const section = document.createElement('section');
+                    section.className = 'card-map';
+                    const hasImage = map.mapImage && map.mapImage.length > 0;
+                    const imageUrl = hasImage ? map.mapImage : defaultImageUrl;
+                    const coverStyle = `background-image: url('${imageUrl.replace(/'/g, "\\'")}');`;
+                    const coverClass = 'map-cover' + (hasImage ? '' : ' map-cover--no-image');
+                    const wamPath = (map.wamFileUrl || '').replace(/^\//, '');
+                    const openUrl = playBase ? `${playBase}~/${wamPath}` : null;
+
+                    const desc = (map.mapDescription && map.mapDescription.trim()) ? map.mapDescription : 'No description';
+                    const licence = (map.mapCopyright && map.mapCopyright.trim()) ? map.mapCopyright : 'No licence existing';
+                    section.innerHTML = `
+                        <div class="${coverClass}" style="${coverStyle}"></div>
+                        <div class="map-name">${escapeHtml(map.mapName)}</div>
+                        <div class="map-detail">
+                            <div class="map-file"><strong>${escapeHtml(map.filename)}</strong></div>
+                        </div>
+                        <div class="map-desc">${escapeHtml(desc)}</div>
+                        <div class="map-copyright">${escapeHtml(licence)}</div>
+                        <div class="map-testurl">
+                            ${openUrl
+                                ? `<a href="${escapeHtml(openUrl)}" class="btn" target="_blank" rel="noopener">Open map</a>`
+                                : `<button type="button" class="btn btn-secondary copy-path-btn" data-path="${escapeHtml(wamPath)}">Copy path</button>
+                                   <span class="map-path-hint">Path: ${escapeHtml(wamPath)}</span>`}
+                        </div>
+                    `;
+
+                    const copyBtn = section.querySelector('.copy-path-btn');
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', () => {
+                            navigator.clipboard.writeText(copyBtn.dataset.path || '');
+                            copyBtn.textContent = 'Copied!';
+                            setTimeout(() => { copyBtn.textContent = 'Copy path'; }, 2000);
+                        });
+                    }
+
+                    main.appendChild(section);
+                });
+
+                // Background fade from first map image if available
+                const firstImg = maps[0]?.mapImage;
+                if (firstImg && typeof module.createBackgroundImageFade === 'function') {
+                    module.createBackgroundImageFade([firstImg]);
+                }
+            } catch (e) {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                if (document.getElementById('error-detail')) {
+                    document.getElementById('error-detail').textContent = e.message || 'Failed to load maps';
+                }
+            }
+        });
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
