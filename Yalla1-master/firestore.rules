@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['phone', 'gold', 'animals', 'createdAt'])
+        && request.resource.data.phone is string
+        && request.resource.data.gold == 5
+        && request.resource.data.animals is list
+        && request.resource.data.animals.size() == 0;
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['gold', 'animals'])
+        && request.resource.data.animals is list
+        && request.resource.data.animals.size() == resource.data.animals.size() + 1
+        && request.resource.data.animals[resource.data.animals.size()] in ['cat', 'dog', 'horse', 'lion']
+        && request.resource.data.gold == resource.data.gold -
+          (request.resource.data.animals[resource.data.animals.size()] == 'cat' ? 2 :
+           request.resource.data.animals[resource.data.animals.size()] == 'dog' ? 3 :
+           request.resource.data.animals[resource.data.animals.size()] == 'horse' ? 10 : 20);
+      allow delete: if false;
+    }
+  }
+}
