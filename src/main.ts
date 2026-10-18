@@ -10,7 +10,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const LOGIN_URL = "https://alaaahmedsayd10-blip.github.io/Yalla1/login.html";
-const SITE_URL = "https://first-xxx.com"; // Change this URL whenever you want.
 const USER_UID_KEY = "yalla_user_uid";
 const RULES_KEY_PREFIX = "yalla_rules_accepted_";
 
@@ -183,15 +182,6 @@ WA.onInit().then(async () => {
     shopPopupOpen = false;
   });
 
-  WA.ui.actionBar.addButton({
-    id: "yalla-first-site",
-    label: "موقعي الأول",
-    imageSrc: "",
-    toolTip: "افتح موقعي الخارجي",
-    bgColor: "#6d28d9",
-    textColor: "#ffffff",
-    callback: () => WA.nav.openTab(SITE_URL),
-  });
 
   // Refresh profile on focus so the banner stays correct after returning from the login modal.
   window.addEventListener("focus", async () => {
