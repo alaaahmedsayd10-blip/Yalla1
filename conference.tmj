@@ -3183,29 +3183,6 @@
       "name": "floorLayer",
       "objects": [
         {
-          "height": 320,
-          "id": 18,
-          "name": "jitsiConference",
-          "properties": [
-            {
-              "name": "jitsiRoom",
-              "type": "string",
-              "value": "Conference"
-            },
-            {
-              "name": "jitsiTrigger",
-              "type": "string",
-              "value": "onaction"
-            }
-          ],
-          "rotation": 0,
-          "type": "area",
-          "visible": true,
-          "width": 219.090909090909,
-          "x": 32,
-          "y": 96
-        },
-        {
           "height": 96,
           "id": 22,
           "name": "to-office",
