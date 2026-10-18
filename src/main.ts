@@ -34,6 +34,12 @@ console.info("Yalla1 Firebase game script starting");
 WA.onInit().then(async () => {
   await bootstrapExtra().catch((error) => console.warn("Scripting API Extra could not start:", error));
 
+  // YALLA_JOIN_WELCOME: greet this player locally when the map finishes loading.
+  // WorkAdventure map scripts run in each visitor's browser, so this is a private/local greeting,
+  // not a broadcast message to everyone else in the room.
+  const welcomeName = WA.player.name?.trim() || "يا بطل";
+  WA.chat.sendChatMessage(`🎮 أهلاً ${welcomeName} في لعبة Yalla! نورت العالم ❤️ استمتع باللعب واكتشف المدينة.`, { scope: "local" });
+
   // A modal login gate is used because WorkAdventure map scripts run in a sandboxed iframe.
   const openLogin = () => {
     if (loginModalOpen || currentUser) return;
