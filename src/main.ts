@@ -48,18 +48,18 @@ WA.onInit().then(async () => {
   chatApi.onChatMessage?.subscribe?.((event) => {
     const incoming = (event.message || "").trim().toLowerCase();
     if (!incoming) return;
-    const replies: Array<[RegExp, string]> = [
-      [/بوت|bot|مساعد|يا يلا|yalla bot/, "🤖 أنا بوت يلا! أقدر أساعدك. اكتب: مساعدة أو جولد أو متجر أو قوانين."],
-      [/مساعدة|help|أوامر/, "🧭 أوامري: اكتب «جولد» لمعرفة رصيدك، «متجر» لمعرفة طريقة الشراء، «قوانين» لعرض القوانين، أو «مساعدة» لعرض الأوامر."],
-      [/جولد|ذهب|gold|رصيد/, () => currentUser ? `🪙 رصيدك الحالي ${currentGold} جولد.` : "🔐 سجّل الدخول أولًا عشان تتابع رصيد الجولد."],
-      [/متجر|حيوان|shop|شراء/, "🛍️ عشان تفتح متجر الحيوانات، روح لمنطقة المتجر داخل الخريطة. تقدر تشتري قطة بـ2 جولد، كلب بـ3، حصان بـ10، أو أسد بـ20."],
-      [/قوانين|rules/, "📜 قوانين يلا: احترم اللاعبين، لا تشارك كلمة المرور، وتأكد من رصيدك قبل الشراء."],
-      [/مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\b/, () => `👋 أهلًا ${welcomeName}! نورت Yalla City. محتاج مساعدة؟ اكتب «مساعدة».`],
-      [/شكرا|شكرًا|thanks/, "❤️ العفو يا بطل، استمتع في Yalla City!"],
+    const replies: { pattern: RegExp; reply: string | (() => string) }[] = [
+      { pattern: /بوت|bot|مساعد|يا يلا|yalla bot/, reply: "🤖 أنا بوت يلا! أقدر أساعدك. اكتب: مساعدة أو جولد أو متجر أو قوانين." },
+      { pattern: /مساعدة|help|أوامر/, reply: "🧭 أوامري: اكتب «جولد» لمعرفة رصيدك، «متجر» لمعرفة طريقة الشراء، «قوانين» لعرض القوانين، أو «مساعدة» لعرض الأوامر." },
+      { pattern: /جولد|ذهب|gold|رصيد/, reply: () => currentUser ? `🪙 رصيدك الحالي ${currentGold} جولد.` : "🔐 سجّل الدخول أولًا عشان تتابع رصيد الجولد." },
+      { pattern: /متجر|حيوان|shop|شراء/, reply: "🛍️ عشان تفتح متجر الحيوانات، روح لمنطقة المتجر داخل الخريطة. تقدر تشتري قطة بـ2 جولد، كلب بـ3، حصان بـ10، أو أسد بـ20." },
+      { pattern: /قوانين|rules/, reply: "📜 قوانين يلا: احترم اللاعبين، لا تشارك كلمة المرور، وتأكد من رصيدك قبل الشراء." },
+      { pattern: /مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\\b/, reply: () => `👋 أهلًا ${welcomeName}! نورت Yalla City. محتاج مساعدة؟ اكتب «مساعدة».` },
+      { pattern: /شكرا|شكرًا|thanks/, reply: "❤️ العفو يا بطل، استمتع في Yalla City!" },
     ];
-    const matched = replies.find(([pattern]) => pattern.test(incoming));
+    const matched = replies.find((item) => item.pattern.test(incoming));
     if (matched) {
-      const reply = typeof matched[1] === "function" ? matched[1]() : matched[1];
+      const reply = typeof matched.reply === "function" ? matched.reply() : matched.reply;
       WA.chat.sendChatMessage(reply, { scope: "local" });
     }
   });
