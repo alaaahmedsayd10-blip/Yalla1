@@ -40,29 +40,45 @@ WA.onInit().then(async () => {
   const welcomeName = WA.player.name?.trim() || "يا بطل";
   WA.chat.sendChatMessage(`🎮 أهلاً ${welcomeName} في لعبة Yalla! نورت العالم ❤️ استمتع باللعب واكتشف المدينة.`, { scope: "local" });
 
-  // YALLA_BOT_V5: interactive in-game helper. Replies locally when the player
-  // sends a message containing a supported keyword.
-  const chatApi = WA.chat as unknown as {
-    onChatMessage?: { subscribe?: (callback: (event: { message?: string; author?: string }) => void) => unknown };
+  // YALLA_BOT_V5: visible help button + working WorkAdventure chat listener.
+  const showBotHelp = () => {
+    WA.chat.open();
+    WA.chat.sendChatMessage(
+      "🤖 أهلاً بيك في مساعد Yalla City! اكتب في الشات: «مساعدة» للأوامر، «جولد» لرصيدك، «متجر» لأسعار الحيوانات، أو «قوانين» للتعليمات. اكتب «بوت» لو عايز تعرف أنا مين.",
+      { scope: "local", author: "🤖 بوت يلا" }
+    );
   };
-  chatApi.onChatMessage?.subscribe?.((event) => {
-    const incoming = (event.message || "").trim().toLowerCase();
+
+  WA.ui.actionBar.addButton({
+    id: "yalla-help-bot",
+    label: "🤖 مساعدة",
+    imageSrc: "",
+    toolTip: "افتح شات وتعليمات بوت يلا",
+    bgColor: "#202b45",
+    textColor: "#ffffff",
+    isGradient: false,
+    location: "top",
+    callback: () => showBotHelp(),
+  });
+
+  WA.chat.onChatMessage((message) => {
+    const incoming = message.trim().toLowerCase();
     if (!incoming) return;
     const replies: { pattern: RegExp; reply: string | (() => string) }[] = [
-      { pattern: /بوت|bot|مساعد|يا يلا|yalla bot/, reply: "🤖 أنا بوت يلا! أقدر أساعدك. اكتب: مساعدة أو جولد أو متجر أو قوانين." },
-      { pattern: /مساعدة|help|أوامر/, reply: "🧭 أوامري: اكتب «جولد» لمعرفة رصيدك، «متجر» لمعرفة طريقة الشراء، «قوانين» لعرض القوانين، أو «مساعدة» لعرض الأوامر." },
+      { pattern: /بوت|bot|مساعد|يا يلا|yalla bot/, reply: "🤖 أنا بوت يلا! اكتب «مساعدة» للأوامر، «جولد» لرصيدك، «متجر» للأسعار، أو «قوانين»." },
+      { pattern: /مساعدة|help|أوامر/, reply: "🧭 أوامري: «جولد» لمعرفة رصيدك، «متجر» لمعرفة أسعار الحيوانات، «قوانين» لعرض التعليمات، أو «مرحبا» للترحيب." },
       { pattern: /جولد|ذهب|gold|رصيد/, reply: () => currentUser ? `🪙 رصيدك الحالي ${currentGold} جولد.` : "🔐 سجّل الدخول أولًا عشان تتابع رصيد الجولد." },
-      { pattern: /متجر|حيوان|shop|شراء/, reply: "🛍️ عشان تفتح متجر الحيوانات، روح لمنطقة المتجر داخل الخريطة. تقدر تشتري قطة بـ2 جولد، كلب بـ3، حصان بـ10، أو أسد بـ20." },
-      { pattern: /قوانين|rules/, reply: "📜 قوانين يلا: احترم اللاعبين، لا تشارك كلمة المرور، وتأكد من رصيدك قبل الشراء." },
-      { pattern: /مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\\b/, reply: () => `👋 أهلًا ${welcomeName}! نورت Yalla City. محتاج مساعدة؟ اكتب «مساعدة».` },
+      { pattern: /متجر|حيوان|shop|شراء/, reply: "🛍️ أسعار الحيوانات: قطة 2 جولد، كلب 3، حصان 10، أسد 20. روح لمنطقة المتجر داخل الخريطة للشراء." },
+      { pattern: /قوانين|rules/, reply: "📜 قوانين يلا: احترم اللاعبين، لا تشارك كلمة المرور، راجع رصيدك قبل الشراء، واستخدم المتجر داخل المنطقة المخصصة." },
+      { pattern: /مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\b/, reply: () => `👋 أهلًا ${welcomeName}! نورت Yalla City. اكتب «مساعدة» لو محتاج تعرف الأوامر.` },
       { pattern: /شكرا|شكرًا|thanks/, reply: "❤️ العفو يا بطل، استمتع في Yalla City!" },
     ];
     const matched = replies.find((item) => item.pattern.test(incoming));
     if (matched) {
       const reply = typeof matched.reply === "function" ? matched.reply() : matched.reply;
-      WA.chat.sendChatMessage(reply, { scope: "local" });
+      WA.chat.sendChatMessage(reply, { scope: "local", author: "🤖 بوت يلا" });
     }
-  });
+  }, { scope: "local" });
 
   // A modal login gate is used because WorkAdventure map scripts run in a sandboxed iframe.
   const openLogin = () => {
