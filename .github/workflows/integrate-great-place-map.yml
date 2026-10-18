@@ -20,8 +20,24 @@ jobs:
         run: |
           test -f Yalla1-great-place-to-work-integration.zip
           unzip -n -q Yalla1-great-place-to-work-integration.zip -d .
-          echo "Extracted archive. New map files:"
-          find . -maxdepth 2 \( -name 'great-place-to-work.tmj' -o -name 'great-place-to-work.wam' -o -name 'map.png' \) -print
+          test -f "wam-preset-hackathon-master (1).zip"
+          mkdir -p /tmp/hackathon-archive
+          unzip -n -q "wam-preset-hackathon-master (1).zip" -d /tmp/hackathon-archive
+          echo "Hackathon archive contents (first 100 paths):"
+          find /tmp/hackathon-archive -maxdepth 4 -type f | head -100
+          # Merge the archive into the project without replacing any existing files.
+          # If the ZIP has a single top-level project folder, merge its contents;
+          # otherwise merge the extracted directory itself.
+          roots=$(find /tmp/hackathon-archive -mindepth 1 -maxdepth 1 -type d | wc -l)
+          files=$(find /tmp/hackathon-archive -mindepth 1 -maxdepth 1 -type f | wc -l)
+          if [ "$roots" -eq 1 ] && [ "$files" -eq 0 ]; then
+            source_dir=$(find /tmp/hackathon-archive -mindepth 1 -maxdepth 1 -type d | head -1)
+          else
+            source_dir=/tmp/hackathon-archive
+          fi
+          cp -rn "$source_dir"/. .
+          echo "Map files found after safe merge:"
+          find . -maxdepth 4 \( -name '*.tmj' -o -name '*.wam' -o -iname '*hackathon*.png' \) -print | head -200
 
       - name: Install dependencies
         run: npm install
