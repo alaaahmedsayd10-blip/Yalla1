@@ -64,6 +64,53 @@ WA.onInit().then(async () => {
   // Mobile fallback: expose help in WorkAdventure's custom menu as well.
   WA.ui.registerMenuCommand("🤖 مساعدة Yalla", { callback: () => showBotHelp() });
 
+  // One-time companion-feature unlock, shown in the native Profile menu.
+  // This adds a Yalla unlock button; it does not modify WorkAdventure's built-in companion selector.
+  const unlockCompanionFeature = async () => {
+    if (!currentUser) {
+      openLogin();
+      return;
+    }
+    const userRef = doc(db, "users", currentUser.uid);
+    try {
+      let alreadyUnlocked = false;
+      await runTransaction(db, async (transaction) => {
+        const snapshot = await transaction.get(userRef);
+        if (!snapshot.exists()) throw new Error("ملف اللاعب غير موجود. سجل الدخول مرة أخرى.");
+        const data = snapshot.data();
+        if (data.companionUnlocked === true) {
+          alreadyUnlocked = true;
+          return;
+        }
+        const gold = Number(data.gold ?? 0);
+        if (gold < 5) throw new Error("الجولد غير كافي. تحتاج 5 جولد لفتح الرفيق.");
+        transaction.update(userRef, {
+          gold: gold - 5,
+          companionUnlocked: true,
+        });
+      });
+      WA.chat.sendChatMessage(
+        alreadyUnlocked
+          ? "✅ ميزة الرفيق مفتوحة لحسابك بالفعل، مش هيتخصم منك جولد تاني."
+          : "🎉 تم فتح ميزة الرفيق لحسابك مقابل 5 جولد مرة واحدة. حيوانات الخريطة الأصلية لم تتغير.",
+        { scope: "local" }
+      );
+    } catch (error) {
+      WA.chat.sendChatMessage(error instanceof Error ? error.message : "حصل خطأ أثناء فتح الرفيق.", { scope: "local" });
+    }
+  };
+
+  WA.ui.actionBar.addButton({
+    id: "yalla-companion-unlock",
+    label: "🐾 فتح الرفيق · 5 جولد",
+    toolTip: "افتح ميزة الرفيق مرة واحدة مقابل 5 جولد",
+    bgColor: "#6842a6",
+    textColor: "#ffffff",
+    isGradient: false,
+    location: "profileMenu",
+    callback: () => void unlockCompanionFeature(),
+  });
+
   WA.chat.onChatMessage((message) => {
     const incoming = message.trim().toLowerCase();
     if (!incoming) return;
