@@ -40,6 +40,30 @@ WA.onInit().then(async () => {
   const welcomeName = WA.player.name?.trim() || "يا بطل";
   WA.chat.sendChatMessage(`🎮 أهلاً ${welcomeName} في لعبة Yalla! نورت العالم ❤️ استمتع باللعب واكتشف المدينة.`, { scope: "local" });
 
+  // YALLA_BOT_V5: interactive in-game helper. Replies locally when the player
+  // sends a message containing a supported keyword.
+  const chatApi = WA.chat as unknown as {
+    onChatMessage?: { subscribe?: (callback: (event: { message?: string; author?: string }) => void) => unknown };
+  };
+  chatApi.onChatMessage?.subscribe?.((event) => {
+    const incoming = (event.message || "").trim().toLowerCase();
+    if (!incoming) return;
+    const replies: Array<[RegExp, string]> = [
+      [/بوت|bot|مساعد|يا يلا|yalla bot/, "🤖 أنا بوت يلا! أقدر أساعدك. اكتب: مساعدة أو جولد أو متجر أو قوانين."],
+      [/مساعدة|help|أوامر/, "🧭 أوامري: اكتب «جولد» لمعرفة رصيدك، «متجر» لمعرفة طريقة الشراء، «قوانين» لعرض القوانين، أو «مساعدة» لعرض الأوامر."],
+      [/جولد|ذهب|gold|رصيد/, () => currentUser ? `🪙 رصيدك الحالي ${currentGold} جولد.` : "🔐 سجّل الدخول أولًا عشان تتابع رصيد الجولد."],
+      [/متجر|حيوان|shop|شراء/, "🛍️ عشان تفتح متجر الحيوانات، روح لمنطقة المتجر داخل الخريطة. تقدر تشتري قطة بـ2 جولد، كلب بـ3، حصان بـ10، أو أسد بـ20."],
+      [/قوانين|rules/, "📜 قوانين يلا: احترم اللاعبين، لا تشارك كلمة المرور، وتأكد من رصيدك قبل الشراء."],
+      [/مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\b/, () => `👋 أهلًا ${welcomeName}! نورت Yalla City. محتاج مساعدة؟ اكتب «مساعدة».`],
+      [/شكرا|شكرًا|thanks/, "❤️ العفو يا بطل، استمتع في Yalla City!"],
+    ];
+    const matched = replies.find(([pattern]) => pattern.test(incoming));
+    if (matched) {
+      const reply = typeof matched[1] === "function" ? matched[1]() : matched[1];
+      WA.chat.sendChatMessage(reply, { scope: "local" });
+    }
+  });
+
   // A modal login gate is used because WorkAdventure map scripts run in a sandboxed iframe.
   const openLogin = () => {
     if (loginModalOpen || currentUser) return;
