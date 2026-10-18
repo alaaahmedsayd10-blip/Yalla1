@@ -52,7 +52,7 @@ WA.onInit().then(async () => {
   WA.ui.actionBar.addButton({
     id: "yalla-help-bot",
     label: "🤖 مساعدة",
-    imageSrc: "",
+    imageSrc: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f916.png",
     toolTip: "افتح شات وتعليمات بوت يلا",
     bgColor: "#202b45",
     textColor: "#ffffff",
@@ -60,6 +60,9 @@ WA.onInit().then(async () => {
     location: "top",
     callback: () => showBotHelp(),
   });
+
+  // Mobile fallback: expose help in WorkAdventure's custom menu as well.
+  WA.ui.registerMenuCommand("🤖 مساعدة Yalla", { callback: () => showBotHelp() });
 
   WA.chat.onChatMessage((message) => {
     const incoming = message.trim().toLowerCase();
