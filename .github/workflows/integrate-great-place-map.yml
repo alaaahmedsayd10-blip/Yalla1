@@ -24,7 +24,7 @@ jobs:
           find . -maxdepth 2 \( -name 'great-place-to-work.tmj' -o -name 'great-place-to-work.wam' -o -name 'map.png' \) -print
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build map
         run: npm run buildmap
