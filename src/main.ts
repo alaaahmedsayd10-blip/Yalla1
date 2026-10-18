@@ -43,6 +43,8 @@ WA.onInit().then(async () => {
       src: LOGIN_URL,
       position: "center",
       allowApi: true,
+      closable: true,
+      allow: null,
       allowFullScreen: false,
     });
   };
