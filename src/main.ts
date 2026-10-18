@@ -33,18 +33,19 @@ WA.onInit().then(async () => {
 
   WA.ui.actionBar.addButton({
     id: "yalla-help-bot",
-    label: "🤖 مساعدة",
+    label: "🤖 بوت يلا",
     imageSrc: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f916.png",
     toolTip: "افتح شات وتعليمات بوت يلا",
     bgColor: "#202b45",
     textColor: "#ffffff",
     isGradient: false,
-    location: "top",
+    location: "appsMenu",
     callback: () => showHelp(),
   });
 
   // Also expose the bot from WorkAdventure's menu on mobile.
-  WA.ui.registerMenuCommand("🤖 مساعدة Yalla", {
+  WA.ui.registerMenuCommand("🤖 بوت يلا - مساعدة", {
+    key: "yalla-bot-help",
     callback: () => showHelp(),
   });
 
