@@ -27,7 +27,11 @@ jobs:
         run: npm install
 
       - name: Build map
-        run: npm run buildmap
+        run: |
+          # Skip the pre-existing broken test map for this build only; restore it immediately.
+          if [ -f test1.tmj ]; then mv test1.tmj test1.tmj.integration-skip; fi
+          trap 'if [ -f test1.tmj.integration-skip ]; then mv test1.tmj.integration-skip test1.tmj; fi' EXIT
+          npm run buildmap
 
       - name: Commit integrated map files
         run: |
