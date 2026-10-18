@@ -3206,39 +3206,6 @@
           "y": 96
         },
         {
-          "height": 71.612250966399,
-          "id": 19,
-          "name": "website",
-          "properties": [
-            {
-              "name": "dynamic",
-              "type": "bool",
-              "value": true
-            },
-            {
-              "name": "openWebsite",
-              "type": "string",
-              "value": "{{{ websiteURL }}}"
-            },
-            {
-              "name": "openWebsiteTrigger",
-              "type": "string",
-              "value": "onaction"
-            },
-            {
-              "name": "openWebsiteTriggerMessage",
-              "type": "string",
-              "value": "Press SPACE or touch here to open a custom website"
-            }
-          ],
-          "rotation": 0,
-          "type": "area",
-          "visible": true,
-          "width": 96,
-          "x": 256,
-          "y": 96
-        },
-        {
           "height": 96,
           "id": 22,
           "name": "to-office",
