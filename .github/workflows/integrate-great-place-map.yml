@@ -1,0 +1,42 @@
+name: Integrate Great Place to Work map
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unpack map files without overwriting existing project files
+        run: |
+          test -f Yalla1-great-place-to-work-integration.zip
+          unzip -n -q Yalla1-great-place-to-work-integration.zip -d .
+          echo "Extracted archive. New map files:"
+          find . -maxdepth 2 \( -name 'great-place-to-work.tmj' -o -name 'great-place-to-work.wam' -o -name 'map.png' \) -print
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build map
+        run: npm run buildmap
+
+      - name: Commit integrated map files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add great-place-to-work.tmj great-place-to-work.wam map.png src/assets src/animations LICENSE.assets LICENSE.map INTEGRATE-INTO-YALLA1.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No new map files to commit."
+          else
+            git commit -m "Add Great Place to Work map and assets"
+            git push origin HEAD:master
+          fi
