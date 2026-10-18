@@ -45,13 +45,6 @@ WA.onInit().then(async () => {
       position: "center",
       allowApi: true,
       allowFullScreen: false,
-      closeCallback: () => {
-        loginModalOpen = false;
-        // Don't let the player bypass login by closing the modal.
-        if (!currentUser && !localStorage.getItem(USER_UID_KEY)) {
-          window.setTimeout(openLogin, 350);
-        }
-      },
     });
   };
 
@@ -130,7 +123,7 @@ WA.onInit().then(async () => {
     }));
     buttons.push({
       label: "إغلاق المتجر",
-      className: "normal" as const,
+      className: "primary" as const,
       callback: (popup: { close: () => void }) => {
         popup.close();
         shopPopupOpen = false;
