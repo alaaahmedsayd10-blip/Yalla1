@@ -37,7 +37,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f great-place-to-work.tmj great-place-to-work.wam map.png src/assets src/animations LICENSE.assets LICENSE.map INTEGRATE-INTO-YALLA1.md 2>/dev/null || true
+          git add -f -- '*.tmj' '*.wam' '*.png' 'src/assets/**' 'src/animations/**' LICENSE.assets LICENSE.map INTEGRATE-INTO-YALLA1.md 2>/dev/null || true
+          echo 'Staged changes:'
+          git status --short
+          git diff --cached --stat
           if git diff --cached --quiet; then
             echo "No new map files to commit."
           else
