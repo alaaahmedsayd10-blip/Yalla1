@@ -1,51 +1,33 @@
 /// <reference types="@workadventure/iframe-api-typings" />
 
 import { bootstrapExtra } from "@workadventure/scripting-api-extra";
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc, getFirestore, onSnapshot, runTransaction } from "firebase/firestore";
-import { firebaseConfig } from "./firebase-config";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const LOGIN_URL = "https://alaaahmedsayd10-blip.github.io/Yalla1/login.html";
-const USER_UID_KEY = "yalla_user_uid";
-const RULES_KEY_PREFIX = "yalla_rules_accepted_";
-
-const ANIMALS = [
-  { id: "cat", label: "قطة", price: 2, emoji: "🐱" },
-  { id: "dog", label: "كلب", price: 3, emoji: "🐶" },
-  { id: "horse", label: "حصان", price: 10, emoji: "🐴" },
-  { id: "lion", label: "أسد", price: 20, emoji: "🦁" },
-] as const;
-
-type AnimalId = (typeof ANIMALS)[number]["id"];
-let currentUser: User | null = null;
-let currentGold = 0;
-let currentPopup: { close: () => void } | undefined;
-let goldUnsubscribe: (() => void) | undefined;
-let loginModalOpen = false;
-let rulesPopupShown = false;
-let shopPopupOpen = false;
-
-console.info("Yalla1 Firebase game script starting");
+console.info("Yalla1 welcome bot starting");
 
 WA.onInit().then(async () => {
-  await bootstrapExtra().catch((error) => console.warn("Scripting API Extra could not start:", error));
+  await bootstrapExtra().catch((error) =>
+    console.warn("Scripting API Extra could not start:", error)
+  );
 
-  // YALLA_JOIN_WELCOME: greet this player locally when the map finishes loading.
-  // WorkAdventure map scripts run in each visitor's browser, so this is a private/local greeting,
-  // not a broadcast message to everyone else in the room.
-  const welcomeName = WA.player.name?.trim() || "يا بطل";
-  WA.chat.sendChatMessage(`🎮 أهلاً ${welcomeName} في لعبة Yalla! نورت العالم ❤️ استمتع باللعب واكتشف المدينة.`, { scope: "local" });
+  // This same script is attached to every Yalla1 map.
+  // Each visitor receives a private welcome message when the map loads.
+  const playerName = WA.player.name?.trim() || "يا بطل";
 
-  // YALLA_BOT_V5: visible help button + working WorkAdventure chat listener.
-  const showBotHelp = () => {
+  const sendBotMessage = (message: string) => {
+    WA.chat.sendChatMessage(message, {
+      scope: "local",
+      author: "🤖 بوت يلا",
+    });
+  };
+
+  sendBotMessage(
+    `🎮 أهلاً ${playerName} في لعبة Yalla! نورت العالم ❤️ استمتع باللعب واكتشف المكان.`
+  );
+
+  const showHelp = () => {
     WA.chat.open();
-    WA.chat.sendChatMessage(
-      "🤖 أهلاً بيك في مساعد Yalla City! اكتب في الشات: «مساعدة» للأوامر، «جولد» لرصيدك، «متجر» لأسعار الحيوانات، أو «قوانين» للتعليمات. اكتب «بوت» لو عايز تعرف أنا مين.",
-      { scope: "local", author: "🤖 بوت يلا" }
+    sendBotMessage(
+      "🤖 أهلاً بيك في مساعد Yalla! اكتب «مساعدة» للأوامر، «قوانين» للتعليمات، أو «مرحبا» عشان أرحب بيك."
     );
   };
 
@@ -58,239 +40,51 @@ WA.onInit().then(async () => {
     textColor: "#ffffff",
     isGradient: false,
     location: "top",
-    callback: () => showBotHelp(),
+    callback: () => showHelp(),
   });
 
-  // Mobile fallback: expose help in WorkAdventure's custom menu as well.
-  WA.ui.registerMenuCommand("🤖 مساعدة Yalla", { callback: () => showBotHelp() });
-
-  // One-time companion-feature unlock, shown in the native Profile menu.
-  // This adds a Yalla unlock button; it does not modify WorkAdventure's built-in companion selector.
-  const unlockCompanionFeature = async () => {
-    if (!currentUser) {
-      openLogin();
-      return;
-    }
-    const userRef = doc(db, "users", currentUser.uid);
-    try {
-      let alreadyUnlocked = false;
-      await runTransaction(db, async (transaction) => {
-        const snapshot = await transaction.get(userRef);
-        if (!snapshot.exists()) throw new Error("ملف اللاعب غير موجود. سجل الدخول مرة أخرى.");
-        const data = snapshot.data();
-        if (data.companionUnlocked === true) {
-          alreadyUnlocked = true;
-          return;
-        }
-        const gold = Number(data.gold ?? 0);
-        if (gold < 5) throw new Error("الجولد غير كافي. تحتاج 5 جولد لفتح الرفيق.");
-        transaction.update(userRef, {
-          gold: gold - 5,
-          companionUnlocked: true,
-        });
-      });
-      WA.chat.sendChatMessage(
-        alreadyUnlocked
-          ? "✅ ميزة الرفيق مفتوحة لحسابك بالفعل، مش هيتخصم منك جولد تاني."
-          : "🎉 تم فتح ميزة الرفيق لحسابك مقابل 5 جولد مرة واحدة. حيوانات الخريطة الأصلية لم تتغير.",
-        { scope: "local" }
-      );
-    } catch (error) {
-      WA.chat.sendChatMessage(error instanceof Error ? error.message : "حصل خطأ أثناء فتح الرفيق.", { scope: "local" });
-    }
-  };
-
-  WA.ui.actionBar.addButton({
-    id: "yalla-companion-unlock",
-    label: "🐾 فتح الرفيق · 5 جولد",
-    toolTip: "افتح ميزة الرفيق مرة واحدة مقابل 5 جولد",
-    bgColor: "#6842a6",
-    textColor: "#ffffff",
-    isGradient: false,
-    location: "profileMenu",
-    callback: () => void unlockCompanionFeature(),
+  // Also expose the bot from WorkAdventure's menu on mobile.
+  WA.ui.registerMenuCommand("🤖 مساعدة Yalla", {
+    callback: () => showHelp(),
   });
 
   WA.chat.onChatMessage((message) => {
     const incoming = message.trim().toLowerCase();
     if (!incoming) return;
+
     const replies: { pattern: RegExp; reply: string | (() => string) }[] = [
-      { pattern: /بوت|bot|مساعد|يا يلا|yalla bot/, reply: "🤖 أنا بوت يلا! اكتب «مساعدة» للأوامر، «جولد» لرصيدك، «متجر» للأسعار، أو «قوانين»." },
-      { pattern: /مساعدة|help|أوامر/, reply: "🧭 أوامري: «جولد» لمعرفة رصيدك، «متجر» لمعرفة أسعار الحيوانات، «قوانين» لعرض التعليمات، أو «مرحبا» للترحيب." },
-      { pattern: /جولد|ذهب|gold|رصيد/, reply: () => currentUser ? `🪙 رصيدك الحالي ${currentGold} جولد.` : "🔐 سجّل الدخول أولًا عشان تتابع رصيد الجولد." },
-      { pattern: /متجر|حيوان|shop|شراء/, reply: "🛍️ أسعار الحيوانات: قطة 2 جولد، كلب 3، حصان 10، أسد 20. روح لمنطقة المتجر داخل الخريطة للشراء." },
-      { pattern: /قوانين|rules/, reply: "📜 قوانين يلا: احترم اللاعبين، لا تشارك كلمة المرور، راجع رصيدك قبل الشراء، واستخدم المتجر داخل المنطقة المخصصة." },
-      { pattern: /مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\b/, reply: () => `👋 أهلًا ${welcomeName}! نورت Yalla City. اكتب «مساعدة» لو محتاج تعرف الأوامر.` },
-      { pattern: /شكرا|شكرًا|thanks/, reply: "❤️ العفو يا بطل، استمتع في Yalla City!" },
+      {
+        pattern: /بوت|bot|مساعد|يا يلا|yalla bot/,
+        reply: "🤖 أنا بوت يلا! اكتب «مساعدة» أو «قوانين» أو «مرحبا» وأنا أساعدك.",
+      },
+      {
+        pattern: /مساعدة|help|أوامر/,
+        reply: "🧭 أقدر أرحب بيك وأعرض لك القوانين. اكتب «قوانين» للتعليمات أو «مرحبا» للترحيب.",
+      },
+      {
+        pattern: /قوانين|rules/,
+        reply: "📜 قوانين يلا: احترم باقي اللاعبين، خليك لطيف في الشات، ولا تشارك بياناتك الشخصية أو كلمات المرور.",
+      },
+      {
+        pattern: /مرحبا|أهلا|اهلا|السلام عليكم|hello|hi\b/,
+        reply: () => `👋 أهلاً ${playerName}! نورت Yalla، استمتع بوقتك ❤️`,
+      },
+      {
+        pattern: /شكرا|شكرًا|thanks/,
+        reply: "❤️ العفو يا بطل، نورت Yalla!",
+      },
+      {
+        pattern: /جولد|ذهب|gold|رصيد|متجر|حيوان|shop|شراء|coins?/,
+        reply: "🎮 يلا دلوقتي للعب والتجول والتواصل مع اللاعبين، من غير نظام جولد أو متجر حيوانات.",
+      },
     ];
+
     const matched = replies.find((item) => item.pattern.test(incoming));
     if (matched) {
       const reply = typeof matched.reply === "function" ? matched.reply() : matched.reply;
-      WA.chat.sendChatMessage(reply, { scope: "local", author: "🤖 بوت يلا" });
+      sendBotMessage(reply);
     }
   }, { scope: "local" });
-
-  // A modal login gate is used because WorkAdventure map scripts run in a sandboxed iframe.
-  const openLogin = () => {
-    if (loginModalOpen || currentUser) return;
-    loginModalOpen = true;
-    WA.ui.modal.openModal({
-      title: "Yalla City Login",
-      src: LOGIN_URL,
-      position: "center",
-      allowApi: true,
-      closable: true,
-      allow: null,
-      allowFullScreen: false,
-    });
-  };
-
-  const showRulesIfNeeded = () => {
-    if (!currentUser || rulesPopupShown) return;
-    const key = RULES_KEY_PREFIX + currentUser.uid;
-    if (localStorage.getItem(key) === "yes") return;
-    rulesPopupShown = true;
-    currentPopup = WA.ui.openPopup("rulesPopup", "قوانين Yalla City\n\n1. احترم باقي اللاعبين.\n2. لا تشارك كلمة المرور مع أي شخص.\n3. تبدأ حسابات اللاعبين الجدد بـ 5 جولد فقط.\n4. عمليات الشراء تخصم الجولد من حسابك.\n5. استخدم المتجر داخل المنطقة المحددة فقط.", [
-      {
-        label: "موافق",
-        className: "success",
-        callback: (popup) => {
-          localStorage.setItem(key, "yes");
-          popup.close();
-          currentPopup = undefined;
-        },
-      },
-    ]);
-  };
-
-  const updateGoldBanner = (gold: number) => {
-    currentGold = gold;
-    WA.ui.banner.openBanner({
-      id: "yalla-gold-banner",
-      text: `🪙 جولدك الحالي: ${gold}`,
-      bgColor: "#202b45",
-      textColor: "#ffffff",
-      closable: false,
-      timeToClose: 0,
-    });
-  };
-
-  const purchaseAnimal = async (animalId: AnimalId) => {
-    if (!currentUser) {
-      openLogin();
-      return;
-    }
-    const animal = ANIMALS.find((item) => item.id === animalId);
-    if (!animal) return;
-    const userRef = doc(db, "users", currentUser.uid);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const snapshot = await transaction.get(userRef);
-        if (!snapshot.exists()) throw new Error("ملف اللاعب غير موجود. سجل الخروج ثم الدخول مرة أخرى.");
-        const data = snapshot.data();
-        const gold = Number(data.gold ?? 0);
-        const animals = Array.isArray(data.animals) ? data.animals : [];
-        if (gold < animal.price) throw new Error(`الجولد غير كافي. تحتاج ${animal.price} جولد لشراء ${animal.label}.`);
-        transaction.update(userRef, { gold: gold - animal.price, animals: [...animals, animal.id] });
-      });
-      WA.chat.sendChatMessage(`تم شراء ${animal.label} بنجاح!`, { scope: "local" });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "حصل خطأ أثناء الشراء.";
-      WA.chat.sendChatMessage(message, { scope: "local" });
-    }
-  };
-
-  const openShop = () => {
-    // The meeting-table/chair area is also the shop interaction point.
-    // If the visitor is not authenticated, open the account screen instead of silently doing nothing.
-    if (!currentUser) {
-      openLogin();
-      return;
-    }
-    if (shopPopupOpen) return;
-    shopPopupOpen = true;
-    const buttons = ANIMALS.map((animal) => ({
-      label: `${animal.emoji} ${animal.label} — ${animal.price} جولد`,
-      className: "primary" as const,
-      callback: (popup: { close: () => void }) => {
-        popup.close();
-        shopPopupOpen = false;
-        void purchaseAnimal(animal.id);
-      },
-    }));
-    buttons.push({
-      label: "إغلاق المتجر",
-      className: "primary" as const,
-      callback: (popup: { close: () => void }) => {
-        popup.close();
-        shopPopupOpen = false;
-      },
-    });
-    currentPopup = WA.ui.openPopup("shopPopup", `🛍️ متجر الحيوانات\nرصيدك الحالي: ${currentGold} جولد\nاختر الحيوان الذي تريد شراءه:`, buttons);
-  };
-
-  const onSignedIn = async (user: User) => {
-    currentUser = user;
-    localStorage.setItem(USER_UID_KEY, user.uid);
-    if (goldUnsubscribe) goldUnsubscribe();
-    const userRef = doc(db, "users", user.uid);
-    try {
-      const snapshot = await getDoc(userRef);
-      if (!snapshot.exists()) {
-        WA.chat.sendChatMessage("ملف حسابك غير موجود في Firestore. تواصل مع إدارة اللعبة.", { scope: "local" });
-        return;
-      }
-      const initialGold = Number(snapshot.data().gold ?? 0);
-      updateGoldBanner(initialGold);
-      goldUnsubscribe = onSnapshot(userRef, (updated) => {
-        if (updated.exists()) updateGoldBanner(Number(updated.data().gold ?? 0));
-      }, (error) => console.error("Gold listener error:", error));
-      loginModalOpen = false;
-      showRulesIfNeeded();
-    } catch (error) {
-      console.error("Could not load player profile:", error);
-      WA.chat.sendChatMessage("تعذر تحميل حسابك. تأكد من إعداد Firestore Rules.", { scope: "local" });
-    }
-  };
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      void onSignedIn(user);
-    } else {
-      currentUser = null;
-      localStorage.removeItem(USER_UID_KEY);
-      openLogin();
-    }
-  });
-
-  // The login iframe and this map script share the GitHub Pages origin.
-  window.addEventListener("storage", (event) => {
-    if (event.key === USER_UID_KEY && event.newValue) {
-      // Firebase Auth's persisted state will trigger onAuthStateChanged as well.
-      loginModalOpen = false;
-    }
-  });
-
-  WA.room.area.onEnter("shop").subscribe(() => openShop());
-  WA.room.area.onLeave("shop").subscribe(() => {
-    if (currentPopup) {
-      currentPopup.close();
-      currentPopup = undefined;
-    }
-    shopPopupOpen = false;
-  });
-
-
-  // Refresh profile on focus so the banner stays correct after returning from the login modal.
-  window.addEventListener("focus", async () => {
-    if (!currentUser) return;
-    try {
-      const snapshot = await getDoc(doc(db, "users", currentUser.uid));
-      if (snapshot.exists()) updateGoldBanner(Number(snapshot.data().gold ?? 0));
-    } catch (error) {
-      console.warn("Could not refresh gold:", error);
-    }
-  });
 }).catch((error) => console.error("WorkAdventure API initialization failed:", error));
 
 export {};
