@@ -7,7 +7,10 @@
 <section class="card" id="authCard"><h2>أهلاً بيك في يلا</h2><p class="muted">اعمل حساب جديد أو سجّل دخولك. الـID بيتولد مرة واحدة وبيفضل ثابت.</p><div class="grid"><div><label for="email">الإيميل</label><input id="email" type="email" autocomplete="email" placeholder="name@example.com"></div><div><label for="password">كلمة المرور (6 أحرف على الأقل)</label><input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="••••••••"></div></div><div class="row"><button class="primary" id="signup">إنشاء حساب</button><button id="login">تسجيل الدخول</button></div><div class="status" id="authStatus"></div></section>
 <section id="app" class="hidden">
 <div class="card"><h2>🌍 اختار عالمك</h2><p class="muted">سجّل دخولك مرة واحدة، وبعدها اختار العالم اللي عايز تدخله. افتح العالم من هنا بعد تسجيل الدخول. ربط الحساب بالشات داخل الخريطة يحتاج خطوة إضافية في سكربت WorkAdventure نفسه.</p><div class="grid">
-<a class="worldLink" data-world="https://play.workadventu.re/@/alaa-store-1792262126/yalla-world/hackathon" href="https://play.workadventu.re/@/alaa-store-1792262126/yalla-world/hackathon">🎮 Yalla World — Hackathon</a>
+<a class="worldLink" data-world="https://play.workadventu.re/@/alaa-store-1792262126/yalla-world/great-place-to-work" href="https://play.workadventu.re/@/alaa-store-1792262126/yalla-world/great-place-to-work">🌐 تجمعات — ادخل العالم ←</a>
+<a class="worldLink" data-world="https://play.workadventu.re/@/alaa-store-1792262126/yalla-city-2/office" href="https://play.workadventu.re/@/alaa-store-1792262126/yalla-city-2/office">🍲 المطعم — ادخل العالم ←</a>
+<a class="worldLink" data-world="https://play.workadventu.re/@/alaa-store-1792262126/server-3/yalla1-firebase" href="https://play.workadventu.re/@/alaa-store-1792262126/server-3/yalla1-firebase">🖋 المكتبة — ادخل العالم ←</a>
+<a class="worldLink" data-world="https://play.workadventu.re/@/alaa-store-1792262126/server4/hackathon" href="https://play.workadventu.re/@/alaa-store-1792262126/server4/hackathon">🌿 مرح — ادخل العالم ←</a>
 
 </div><p class="muted">لو رابط عالم من دول مش هو الاسم المنشور عندك، استخدم رابط العالم الصحيح من لوحة WorkAdventure؛ مش هننشئ عوالم جديدة.</p></div>
 <div class="card"><div class="row"><div><div class="muted">حسابك — الـID الثابت</div><div class="id" id="myId">------</div><div id="myEmail" class="muted"></div></div><button id="copyId">نسخ الـID</button><button id="logout" class="danger">خروج</button></div><p class="muted">شارك الـID مع أصحابك عشان يعرفوا حسابك. الـID مش كلمة مرور.</p></div>
@@ -20,6 +23,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+// Preserve the logged-in Firebase account ID when opening a WorkAdventure world.
+document.addEventListener("click",e=>{const link=e.target.closest("a[data-world]");if(!link)return;const id=document.getElementById("myId")?.textContent?.trim();if(!/^\d{6}$/.test(id||"")){e.preventDefault();document.getElementById("authStatus").textContent="سجّل الدخول الأول عشان تدخل العالم برقم لاعبك.";return}const u=new URL(link.href);u.hash="yallaId="+encodeURIComponent(id)+"&name="+encodeURIComponent((document.getElementById("myEmail")?.textContent||"Yalla").split("@")[0].slice(0,24));link.href=u.toString();});
 const firebaseConfig={apiKey:"AIzaSyC7nexX-dwj_IhYC5EaS-DU_YQeE6-acDw",authDomain:"game-af286.firebaseapp.com",projectId:"game-af286",storageBucket:"game-af286.firebasestorage.app",messagingSenderId:"567693078252",appId:"1:567693078252:web:3b5d6475a583f1f7347fc9",measurementId:"G-JKFYDGCFML"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
 let profile=null,roomId=null,unChat=null,unEvents=null,activeGame=null,unsubscribeAuth=null;
