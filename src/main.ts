@@ -16,7 +16,7 @@ WA.onInit().then(async () => {
   // Show it as a persistent action-bar tile in every map using this shared script.
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const yallaPlayerId = hashParams.get("yallaId") || "";
-  if (/^\\d{6}$/.test(yallaPlayerId)) {
+  if (/^\d{7}$/.test(yallaPlayerId)) {
     WA.ui.actionBar.addButton({
       id: "yalla-player-id",
       label: "🆔 ID: " + yallaPlayerId,
