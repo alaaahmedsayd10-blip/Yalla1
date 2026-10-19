@@ -43,33 +43,43 @@ WA.onInit().then(async () => {
     callback: () => showHelp(),
   });
 
-  const openYallaGames = () => {
-    WA.ui.modal.openModal({
-      title: "🎮 ألعاب يلا",
-      src: "https://alaaahmedsayd10-blip.github.io/Yalla1/yalla-games.html",
-      allowApi: true,
-      allow: "",
-      closable: true,
-      position: "center",
-      allowFullScreen: true,
-    });
+  // Games run through the map scripting API and the room chat/events.
+  // No external game page, iframe, Firebase, or database is opened.
+  const GAME_EVENT = "yalla1-native-game-v1";
+  type GamePacket = { kind: string; player?: string; text?: string; answer?: string; round?: number };
+  const broadcastGame = (packet: GamePacket) => {
+    WA.event.broadcast(GAME_EVENT, packet);
   };
+  const gameHelp = () => {
+    WA.chat.open();
+    sendBotMessage(
+      "🎮 ألعاب يلا داخل الخريطة — اكتب في الشات: «ابدأ غميضة»، «ابدأ كويز»، «ابدأ رسم»، «ابدأ كراسي». " +
+      "للكويز اكتب إجابتك في الشات، وللرسم اكتب تخمينك. الألعاب بتعلن حالتها للاعبين الموجودين في نفس الغرفة."
+    );
+  };
+
+  WA.event.on(GAME_EVENT).subscribe((packet: GamePacket) => {
+    if (!packet || packet.player === playerName) return;
+    if (packet.kind === "announce") sendBotMessage(packet.text || "🎮 لعبة جديدة بدأت!");
+    if (packet.kind === "guess") sendBotMessage(`🎨 ${packet.player || "لاعب"} بيخمن: ${packet.text || "؟"}`);
+    if (packet.kind === "answer") sendBotMessage(`🧠 ${packet.player || "لاعب"} جاوب: ${packet.answer || "؟"}`);
+  });
 
   WA.ui.actionBar.addButton({
     id: "yalla-live-games",
-    label: "🎮 ألعاب يلا",
+    label: "🎮 ألعاب داخل الخريطة",
     imageSrc: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3ae.png",
-    toolTip: "غميضة وكويز وسكريبل وكرسي الموسيقى",
+    toolTip: "ابدأ لعبة جماعية من شات الخريطة",
     bgColor: "#6d28d9",
     textColor: "#ffffff",
     isGradient: false,
     location: "appsMenu",
-    callback: () => openYallaGames(),
+    callback: () => gameHelp(),
   });
 
-  WA.ui.registerMenuCommand("🎮 ألعاب يلا - افتح الألعاب", {
+  WA.ui.registerMenuCommand("🎮 ألعاب يلا داخل الخريطة", {
     key: "yalla-live-games-menu",
-    callback: () => openYallaGames(),
+    callback: () => gameHelp(),
   });
 
   // Also expose the bot from WorkAdventure's menu on mobile.
@@ -81,6 +91,32 @@ WA.onInit().then(async () => {
   WA.chat.onChatMessage((message) => {
     const incoming = message.trim().toLowerCase();
     if (!incoming) return;
+
+    if (/^ابدأ غميضة$|^ابدأ الغميضة$/.test(incoming)) {
+      const text = `🙈 غميضة بدأت! ${playerName} أعلن الجولة. اختاروا لاعب يغمّض عينه وعدّوا لـ20، والباقي يستخبّى داخل الخريطة!`;
+      sendBotMessage(text); broadcastGame({kind:"announce", player:playerName, text}); return;
+    }
+    if (/^ابدأ كويز$/.test(incoming)) {
+      const text = "🧠 سؤال الكويز: ما عاصمة مصر؟ اكتب إجابتك في الشات. الإجابة الصحيحة: القاهرة.";
+      sendBotMessage(text); broadcastGame({kind:"announce", player:playerName, text}); return;
+    }
+    if (/^ابدأ رسم$|^ابدأ سكريبل$/.test(incoming)) {
+      const text = `🎨 جولة تخمين رسم بدأت بقيادة ${playerName}! ارسم على ورقة/أداة الرسم المتاحة لكم، واكتبوا تخميناتكم في الشات. الكلمة السرية للقائد: قطة.`;
+      sendBotMessage(text); broadcastGame({kind:"announce", player:playerName, text}); return;
+    }
+    if (/^ابدأ كراسي$|^ابدأ الكراسي$/.test(incoming)) {
+      const text = `🎵 الكراسي الموسيقية بدأت بقيادة ${playerName}! لفّوا حول الكراسي في الخريطة؛ لما القائد يقول «قفوا»، كل لاعب يقف عند كرسي. شيلوا كرسي كل جولة.`;
+      sendBotMessage(text); broadcastGame({kind:"announce", player:playerName, text}); return;
+    }
+    if (/^القاهرة$|^القاهره$/.test(incoming)) {
+      sendBotMessage("✅ إجابة صحيحة! نقطة ليك في الكويز 🎉");
+      broadcastGame({kind:"answer", player:playerName, answer:message.trim()}); return;
+    }
+    if (/^خمن:/.test(incoming) || /^تخمين:/.test(incoming)) {
+      const guess = message.trim().replace(/^(خمن:|تخمين:)/i, "").trim();
+      broadcastGame({kind:"guess", player:playerName, text:guess});
+      return;
+    }
 
     const replies: { pattern: RegExp; reply: string | (() => string) }[] = [
       {
