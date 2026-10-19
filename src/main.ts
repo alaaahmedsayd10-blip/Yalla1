@@ -48,6 +48,8 @@ WA.onInit().then(async () => {
       title: "🎮 ألعاب يلا",
       src: "https://alaaahmedsayd10-blip.github.io/Yalla1/yalla-games.html",
       allowApi: true,
+      allow: "",
+      closable: true,
       position: "center",
       allowFullScreen: true,
     });
