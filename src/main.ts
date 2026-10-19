@@ -43,6 +43,33 @@ WA.onInit().then(async () => {
     callback: () => showHelp(),
   });
 
+  const openYallaGames = () => {
+    WA.ui.modal.openModal({
+      title: "🎮 ألعاب يلا",
+      src: "https://alaaahmedsayd10-blip.github.io/Yalla1/yalla-games.html",
+      allowApi: true,
+      position: "center",
+      allowFullScreen: true,
+    });
+  };
+
+  WA.ui.actionBar.addButton({
+    id: "yalla-live-games",
+    label: "🎮 ألعاب يلا",
+    imageSrc: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3ae.png",
+    toolTip: "غميضة وكويز وسكريبل وكرسي الموسيقى",
+    bgColor: "#6d28d9",
+    textColor: "#ffffff",
+    isGradient: false,
+    location: "appsMenu",
+    callback: () => openYallaGames(),
+  });
+
+  WA.ui.registerMenuCommand("🎮 ألعاب يلا - افتح الألعاب", {
+    key: "yalla-live-games-menu",
+    callback: () => openYallaGames(),
+  });
+
   // Also expose the bot from WorkAdventure's menu on mobile.
   WA.ui.registerMenuCommand("🤖 بوت يلا - مساعدة", {
     key: "yalla-bot-help",
