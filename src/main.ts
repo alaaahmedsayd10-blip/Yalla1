@@ -25,7 +25,7 @@ WA.onInit().then(async () => {
       bgColor: "#31215a",
       textColor: "#ffffff",
       isGradient: false,
-      location: "appsMenu",
+      location: "actionBar",
       callback: () => {
         WA.chat.sendChatMessage("🆔 رقم اللاعب بتاعي في Yalla City: " + yallaPlayerId, {
           scope: "local",
