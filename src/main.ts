@@ -12,6 +12,29 @@ WA.onInit().then(async () => {
   // This same script is attached to every Yalla1 map.
   // Each visitor receives a private welcome message when the map loads.
   const playerName = WA.player.name?.trim() || "يا بطل";
+  // The Yalla City index passes the signed-in player's six-digit ID in the world URL hash.
+  // Show it as a persistent action-bar tile in every map using this shared script.
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const yallaPlayerId = hashParams.get("yallaId") || "";
+  if (/^\\d{6}$/.test(yallaPlayerId)) {
+    WA.ui.actionBar.addButton({
+      id: "yalla-player-id",
+      label: "🆔 ID: " + yallaPlayerId,
+      imageSrc: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f194.png",
+      toolTip: "رقم لاعبك الثابت في Yalla City",
+      bgColor: "#31215a",
+      textColor: "#ffffff",
+      isGradient: false,
+      location: "appsMenu",
+      callback: () => {
+        WA.chat.sendChatMessage("🆔 رقم اللاعب بتاعي في Yalla City: " + yallaPlayerId, {
+          scope: "local",
+          author: "🆔 رقم اللاعب",
+        });
+        WA.chat.open();
+      },
+    });
+  }
 
   const sendBotMessage = (message: string) => {
     WA.chat.sendChatMessage(message, {
