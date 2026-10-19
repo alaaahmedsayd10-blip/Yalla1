@@ -58,12 +58,8 @@ WA.onInit().then(async () => {
     );
   };
 
-  WA.event.on(GAME_EVENT).subscribe((packet: GamePacket) => {
-    if (!packet || packet.player === playerName) return;
-    if (packet.kind === "announce") sendBotMessage(packet.text || "🎮 لعبة جديدة بدأت!");
-    if (packet.kind === "guess") sendBotMessage(`🎨 ${packet.player || "لاعب"} بيخمن: ${packet.text || "؟"}`);
-    if (packet.kind === "answer") sendBotMessage(`🧠 ${packet.player || "لاعب"} جاوب: ${packet.answer || "؟"}`);
-  });
+  // Custom event subscriptions are not supported by the typings version used by this project.
+  // Game announcements remain in the local room chat for now.
 
   WA.ui.actionBar.addButton({
     id: "yalla-live-games",
