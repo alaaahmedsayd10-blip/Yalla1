@@ -44434,16 +44434,16 @@
   },
   {
    "firstgid": 7132,
-   "columns": 1,
+   "columns": 4,
    "image": "townhall.png",
-   "imageheight": 128,
+   "imageheight": 32,
    "imagewidth": 128,
    "margin": 0,
    "name": "townhall",
    "spacing": 0,
-   "tilecount": 1,
-   "tileheight": 128,
-   "tilewidth": 128
+   "tilecount": 4,
+   "tileheight": 32,
+   "tilewidth": 32
   }
  ],
  "tilewidth": 32,
