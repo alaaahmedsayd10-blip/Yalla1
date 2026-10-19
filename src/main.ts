@@ -145,7 +145,7 @@ const handleMiniGame = (raw: string): boolean => {
     sendBotMessage("♈ اكتب يوم وشهر ميلادك بالشكل ده: برجي 15/5 — وهقولك برجك وصفة لطيفة للتسلية 😊");
     return true;
   }
-  const birth = input.match(/^(?:برجي|برجى|حظي|حظى)\\s+(\\d{1,2})[\\/.-](\\d{1,2})$/);
+  const birth = input.match(/^(?:برجي|برجى|حظي|حظى)\s+(\d{1,2})[\/.-](\d{1,2})$/);
   if (birth) {
     const sign = zodiacFor(Number(birth[1]), Number(birth[2]));
     if (!sign) sendBotMessage("اكتب التاريخ بشكل صحيح مثل: برجي 15/5 😊");
@@ -200,7 +200,7 @@ const handleMiniGame = (raw: string): boolean => {
     activeRiddleAnswer = "";
     return true;
   }
-  if (numberToGuess !== null && /^\\d+$/.test(input)) {
+  if (numberToGuess !== null && /^\d+$/.test(input)) {
     const guess = Number(input);
     if (guess === numberToGuess) {
       sendBotMessage("🎉 صح! الرقم كان " + numberToGuess + ". اكتب «خمن رقم» لجولة جديدة.");
