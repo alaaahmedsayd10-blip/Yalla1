@@ -19,10 +19,10 @@ struct Quad { Vector3 p[4]; Vector2 uv[4]; };
 struct Batch { std::vector<float> vertices,uvs,normals; std::vector<unsigned short> indices; };
 struct LayerMesh { Mesh mesh{}; Material material{}; bool valid=false; };
 static std::string cleanPath(std::string p){if(p.rfind("./",0)==0)p.erase(0,2);return p;}
-static void addQuad(Batch& b,const Quad& q){
+static void addQuad(Batch& b,const Quad& q,bool vertical){
  if(b.vertices.size()/3>65530)return; const unsigned short base=(unsigned short)(b.vertices.size()/3);
- for(int i=0;i<4;i++){b.vertices.insert(b.vertices.end(),{q.p[i].x,q.p[i].y,q.p[i].z});b.uvs.insert(b.uvs.end(),{q.uv[i].x,q.uv[i].y});b.normals.insert(b.normals.end(),{0,1,0});}
- b.indices.insert(b.indices.end(),{base,(unsigned short)(base+1),(unsigned short)(base+2),base,(unsigned short)(base+2),(unsigned short)(base+3)});
+ for(int i=0;i<4;i++){b.vertices.insert(b.vertices.end(),{q.p[i].x,q.p[i].y,q.p[i].z});b.uvs.insert(b.uvs.end(),{q.uv[i].x,q.uv[i].y});if(vertical)b.normals.insert(b.normals.end(),{0,0,1});else b.normals.insert(b.normals.end(),{0,1,0});}
+ b.indices.insert(b.indices.end(),{base,(unsigned short)(base+2),(unsigned short)(base+1),base,(unsigned short)(base+3),(unsigned short)(base+2)});
 }
 static Mesh uploadBatch(const Batch& b){
  Mesh m{};m.vertexCount=(int)(b.vertices.size()/3);m.triangleCount=(int)(b.indices.size()/3);if(!m.vertexCount)return m;
@@ -43,7 +43,7 @@ class OriginalMap3DEngine{
     const float u0=(float)sx/ts.imageW,v0=(float)sy/ts.imageH,u1=(float)(sx+ts.tileW)/ts.imageW,v1=(float)(sy+ts.tileH)/ts.imageH;
     Vector2 uv[4]={{u0,v1},{u1,v1},{u1,v0},{u0,v0}};
     if(raw&FLIP_H){std::swap(uv[0],uv[1]);std::swap(uv[3],uv[2]);}if(raw&FLIP_V){std::swap(uv[0],uv[3]);std::swap(uv[1],uv[2]);}if(raw&FLIP_D){std::swap(uv[0],uv[2]);std::swap(uv[1],uv[3]);}
-    Quad q{};const float x=tx*TILE,z=ty*TILE;if(wall){q.p[0]={x,TILE,z};q.p[1]={x+TILE,TILE,z};q.p[2]={x+TILE,0,z};q.p[3]={x,0,z};}else{q.p[0]={x,0,z};q.p[1]={x+TILE,0,z};q.p[2]={x+TILE,0,z+TILE};q.p[3]={x,0,z+TILE};}for(int k=0;k<4;k++)q.uv[k]=uv[k];addQuad(batches[ti],q);
+    Quad q{};const float x=tx*TILE,z=ty*TILE;if(wall){q.p[0]={x,TILE,z};q.p[1]={x+TILE,TILE,z};q.p[2]={x+TILE,0,z};q.p[3]={x,0,z};}else{q.p[0]={x,0,z};q.p[1]={x+TILE,0,z};q.p[2]={x+TILE,0,z+TILE};q.p[3]={x,0,z+TILE};}for(int k=0;k<4;k++)q.uv[k]=uv[k];addQuad(batches[ti],q,wall);
    }
    for(auto& e:batches){LayerMesh lm;lm.mesh=uploadBatch(e.second);lm.material=LoadMaterialDefault();lm.material.maps[MATERIAL_MAP_DIFFUSE].texture=tilesets[e.first].texture;lm.valid=lm.mesh.vertexCount>0;if(lm.valid)rendered.push_back(lm);}
   }
