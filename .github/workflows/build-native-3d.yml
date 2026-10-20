@@ -1,4 +1,4 @@
-name: Build native 3D map engine
+name: Build and run native 3D map engine
 on:
   push:
     branches: [master]
@@ -13,13 +13,39 @@ on:
       - '.github/workflows/build-native-3d.yml'
   workflow_dispatch:
 jobs:
-  build-linux:
+  build-and-smoke-test:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install raylib Linux dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake git libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libxfixes-dev
+      - name: Install build and virtual-display dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake git libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libxfixes-dev xvfb imagemagick
       - name: Configure
         run: cmake -S engine3d -B engine3d/build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build engine3d/build --parallel 2
+      - name: Launch 3D engine and capture preview
+        run: |
+          set -eu
+          xvfb-run -a sh -c '
+            ./engine3d/build/yalla-map3d . > engine3d-run.log 2>&1 &
+            app_pid=$!
+            sleep 8
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              cat engine3d-run.log
+              wait "$app_pid"
+              exit 1
+            fi
+            import -window root engine3d-preview.png
+            kill "$app_pid" 2>/dev/null || true
+            wait "$app_pid" 2>/dev/null || true
+          '
+          cat engine3d-run.log
+      - name: Upload engine preview and run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yalla-3d-engine-preview
+          path: |
+            engine3d-preview.png
+            engine3d-run.log
+          if-no-files-found: warn
