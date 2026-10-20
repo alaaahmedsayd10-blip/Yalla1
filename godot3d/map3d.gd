@@ -15,7 +15,7 @@ var textures: Dictionary = {}
 var blocked: Dictionary = {}
 var player: CharacterBody3D
 var camera_pivot: Node3D
-var move_speed := 6.0
+var move_speed := 140.0
 
 func _ready() -> void:
     _load_original_map()
@@ -170,9 +170,9 @@ func _build_collision(layers: Array) -> void:
                 var body := StaticBody3D.new()
                 var shape := CollisionShape3D.new()
                 var box := BoxShape3D.new()
-                box.size = Vector3(TILE, 2.5, TILE)
+                box.size = Vector3(TILE, 28.0, TILE)
                 shape.shape = box
-                body.position = Vector3((i % width + 0.5) * TILE, 1.1, (int(i / width) + 0.5) * TILE)
+                body.position = Vector3((i % width + 0.5) * TILE, 12.0, (int(i / width) + 0.5) * TILE)
                 body.add_child(shape)
                 add_child(body)
 
@@ -181,20 +181,20 @@ func _make_player() -> void:
     player.name = "Player"
     var body_mesh := MeshInstance3D.new()
     var capsule := CapsuleMesh.new()
-    capsule.radius = 0.42
-    capsule.height = 1.8
+    capsule.radius = 8.0
+    capsule.height = 24.0
     body_mesh.mesh = capsule
     var mat := StandardMaterial3D.new()
     mat.albedo_color = Color("#e6a24b")
     body_mesh.material_override = mat
-    body_mesh.position.y = 0.9
+    body_mesh.position.y = 12.0
     player.add_child(body_mesh)
     var collider := CollisionShape3D.new()
     var shape := CapsuleShape3D.new()
-    shape.radius = 0.42
-    shape.height = 1.8
+    shape.radius = 8.0
+    shape.height = 24.0
     collider.shape = shape
-    collider.position.y = 0.9
+    collider.position.y = 12.0
     player.add_child(collider)
     player.position = Vector3(8 * TILE, 0, 8 * TILE)
     add_child(player)
@@ -204,7 +204,7 @@ func _make_camera() -> void:
     camera_pivot.position = Vector3(0, 0, 0)
     player.add_child(camera_pivot)
     var camera := Camera3D.new()
-    camera.position = Vector3(0, 18, 22)
+    camera.position = Vector3(0, 420, 600)
     camera.rotation_degrees = Vector3(-35, 0, 0)
     camera.current = true
     camera_pivot.add_child(camera)
