@@ -203976,6 +203976,21 @@
       "name": "script",
       "type": "string",
       "value": "src/main.ts"
+    },
+    {
+      "name": "yalla3DRenderer",
+      "type": "string",
+      "value": "engine3d"
+    },
+    {
+      "name": "yalla3DMode",
+      "type": "bool",
+      "value": true
+    },
+    {
+      "name": "yalla3DDescription",
+      "type": "string",
+      "value": "Render this original Tiled map through the native C++/raylib 3D renderer in engine3d. The map tile data and existing tileset references remain the source of truth."
     }
   ],
   "renderorder": "right-down",
