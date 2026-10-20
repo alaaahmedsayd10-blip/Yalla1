@@ -1,0 +1,25 @@
+name: Build native 3D map engine
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'engine3d/**'
+      - 'great-place-to-work.tmj'
+      - '.github/workflows/build-native-3d.yml'
+  pull_request:
+    paths:
+      - 'engine3d/**'
+      - 'great-place-to-work.tmj'
+      - '.github/workflows/build-native-3d.yml'
+  workflow_dispatch:
+jobs:
+  build-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install raylib Linux dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake git libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libxfixes-dev
+      - name: Configure
+        run: cmake -S engine3d -B engine3d/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build engine3d/build --parallel 2
