@@ -7,9 +7,9 @@
 <script type="module">
 import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const TILE=32;let W=79,D=92;const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bc6d3);scene.fog=new THREE.Fog(0x9bc6d3,115,270);
-const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,800);camera.position.set(86,95,115);
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,800);camera.position.set(105,145,150);
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
-const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(W/2,0,D/2);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=15;controls.maxDistance=210;
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(W/2,0,D/2);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.43;controls.minDistance=15;controls.maxDistance=210;
 scene.add(new THREE.HemisphereLight(0xe7f8ff,0x58634a,2));const sun=new THREE.DirectionalLight(0xfff0d8,2.4);sun.position.set(40,100,35);sun.castShadow=true;scene.add(sun);
 const status=document.querySelector('#status'),mapGroup=new THREE.Group();scene.add(mapGroup);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(W,D),new THREE.MeshStandardMaterial({color:0x8aab78,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.set(W/2,-.18,D/2);floor.receiveShadow=true;scene.add(floor);
@@ -29,11 +29,17 @@ async function buildOriginalMap(){
   if(!layer.data||!layer.data.some(v=>v!==0)||layer._name.endsWith('/collisions')||layer.name==='collisions'||layer.name==='start')continue;
   const isWall=layer._group==='Wall'||layer.name.trim().startsWith('Wall');const isAbove=layer._group==='Above'||layer.name==='Lights';
   if(isWall){
-   // Render the actual wall tiles upright, at their original tile coordinates, with a little depth.
+   // Build raised 3D wall segments from the original wall tiles, keeping each tile's map cell.
    const geo=new THREE.PlaneGeometry(1,1);let n=0;
-   for(let i=0;i<layer.data.length;i++){const raw=layer.data[i]>>>0;if(!raw)continue;const gid=raw&0x1fffffff,tex=tileTex(raw);if(!tex)continue;
-    const material=new THREE.MeshBasicMaterial({map:tex,transparent:true,alphaTest:.035,side:THREE.DoubleSide,depthWrite:true});
-    const mesh=new THREE.Mesh(geo,material);mesh.position.set((i%W)+.5,.52+Math.floor(i/W)*0.0001,Math.floor(i/W)+.49);mesh.rotation.y=0;mesh.renderOrder=10+n%3;mapGroup.add(mesh);n++;
+   for(let i=0;i<layer.data.length;i++){const raw=layer.data[i]>>>0;if(!raw)continue;const tex=tileTex(raw);if(!tex)continue;
+    const x=(i%W)+.5,z=Math.floor(i/W)+.5;
+    const material=new THREE.MeshStandardMaterial({map:tex,transparent:true,alphaTest:.035,side:THREE.DoubleSide,roughness:1});
+    const face=new THREE.Mesh(geo,material);face.position.set(x,.52,z);face.renderOrder=10+n%3;face.castShadow=true;face.receiveShadow=true;mapGroup.add(face);
+    const sideMat=new THREE.MeshStandardMaterial({color:0x77716a,roughness:1});
+    const depth=new THREE.Mesh(new THREE.BoxGeometry(.96,.96,.22),sideMat);depth.position.set(x,.52,z-.10);depth.castShadow=true;depth.receiveShadow=true;mapGroup.add(depth);
+    // Place the tile artwork on the front of the raised segment.
+    face.position.z=z+.015;
+    n++;
    }wallCount+=n;continue;
   }
   // Preserve every original floor/detail/above tile at its exact map cell on its own height plane.
@@ -49,6 +55,6 @@ async function buildOriginalMap(){
 }
 buildOriginalMap().catch(e=>{console.error(e);status.textContent='Map load error: '+e.message+' (check the original TMJ asset paths)'});
 let joy={x:0,y:0},drag=false;const pad=document.querySelector('#pad'),nub=document.querySelector('#nub');function joyMove(e){const r=pad.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let x=(e.clientX-cx)/42,y=(e.clientY-cy)/42,l=Math.hypot(x,y);if(l>1){x/=l;y/=l}joy={x,y};nub.style.transform='translate('+x*38+'px,'+y*38+'px)'}pad.addEventListener('pointerdown',e=>{drag=true;pad.setPointerCapture(e.pointerId);joyMove(e)});pad.addEventListener('pointermove',e=>{if(drag)joyMove(e)});function stopJoy(){drag=false;joy={x:0,y:0};nub.style.transform='translate(0,0)'}pad.addEventListener('pointerup',stopJoy);pad.addEventListener('pointercancel',stopJoy);
-document.querySelector('#reset').onclick=()=>{camera.position.set(W*.9,D*1.03,D*1.25);controls.target.set(W/2,0,D/2);controls.update()};addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+document.querySelector('#reset').onclick=()=>{camera.position.set(W*1.15,D*1.55,D*1.65);controls.target.set(W/2,0,D/2);controls.update()};addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(player){let x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x,z=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;const len=Math.hypot(x,z);if(len>.08){x/=Math.max(1,len);z/=Math.max(1,len);const speed=dt*4.5,nx=THREE.MathUtils.clamp(player.position.x+x*speed,.35,W-.35),nz=THREE.MathUtils.clamp(player.position.z+z*speed,.35,D-.35);const cell=(px,pz)=>Math.floor(pz)*W+Math.floor(px);if(!blocked.has(cell(nx,player.position.z)))player.position.x=nx;if(!blocked.has(cell(player.position.x,nz)))player.position.z=nz;player.rotation.y=Math.atan2(x,z);controls.target.lerp(new THREE.Vector3(player.position.x,0,player.position.z),.035)}}controls.update();renderer.render(scene,camera)}animate();
 </script></body></html>
