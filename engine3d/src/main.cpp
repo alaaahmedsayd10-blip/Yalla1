@@ -56,7 +56,7 @@ public:
    if(!fs::exists(image))std::cerr<<"Missing tileset: "<<image<<"\n";else{t.texture=LoadTexture(image.string().c_str());SetTextureFilter(t.texture,TEXTURE_FILTER_POINT);}tilesets.push_back(t);}
   std::sort(tilesets.begin(),tilesets.end(),[](const Tileset&a,const Tileset&b){return a.firstGid<b.firstGid;});if(map.contains("layers"))collectLayers(map["layers"],"",true);ok=!rendered.empty();std::cout<<"Original map "<<mapW<<"x"<<mapH<<" | tilesets "<<tilesets.size()<<" | 3D batches "<<rendered.size()<<"\n";return ok;
  }
- void run(){SetConfigFlags(FLAG_MSAA_4X_HINT|FLAG_WINDOW_RESIZABLE);InitWindow(1280,800,"YALLA - Original Great Place Map | 3D Engine");SetTargetFPS(60);DisableCursor();updateCamera();
+ void run(){SetTargetFPS(60);DisableCursor();updateCamera();
   while(!WindowShouldClose()){float dt=GetFrameTime();yaw-=GetMouseDelta().x*.0025f;pitch=Clamp(pitch-GetMouseDelta().y*.0025f,.12f,1.35f);cameraDistance=Clamp(cameraDistance-GetMouseWheelMove()*24,150,1000);
    Vector3 f={-sinf(yaw),0,-cosf(yaw)},r={cosf(yaw),0,-sinf(yaw)},d={0,0,0};if(IsKeyDown(KEY_W)||IsKeyDown(KEY_UP))d=Vector3Add(d,f);if(IsKeyDown(KEY_S)||IsKeyDown(KEY_DOWN))d=Vector3Subtract(d,f);if(IsKeyDown(KEY_D)||IsKeyDown(KEY_RIGHT))d=Vector3Add(d,r);if(IsKeyDown(KEY_A)||IsKeyDown(KEY_LEFT))d=Vector3Subtract(d,r);
    if(Vector3Length(d)>0){d=Vector3Scale(Vector3Normalize(d),120*dt);Vector3 next=Vector3Add(player,d);bool hit=false;for(const auto& c:collisionCells)if(fabsf(next.x-c.x)<TILE*.42f&&fabsf(next.z-c.z)<TILE*.42f){hit=true;break;}if(!hit)player=next;}updateCamera();
@@ -65,4 +65,4 @@ public:
   for(auto& lm:rendered){if(lm.valid)UnloadMesh(lm.mesh);UnloadMaterial(lm.material);}for(auto& t:tilesets)if(t.texture.id)UnloadTexture(t.texture);CloseWindow();
  }
 };
-int main(int argc,char**argv){fs::path root=argc>1?fs::absolute(argv[1]):fs::current_path();OriginalMap3DEngine e;if(!e.load(root/"great-place-to-work.tmj"))return 2;e.run();return 0;}
+int main(int argc,char**argv){SetConfigFlags(FLAG_MSAA_4X_HINT|FLAG_WINDOW_RESIZABLE);InitWindow(1280,800,"YALLA - Original Great Place Map | 3D Engine");fs::path root=argc>1?fs::absolute(argv[1]):fs::current_path();OriginalMap3DEngine e;if(!e.load(root/"great-place-to-work.tmj")){CloseWindow();return 2;}e.run();return 0;}
