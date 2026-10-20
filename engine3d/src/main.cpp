@@ -1,6 +1,6 @@
 #include "raylib.h"
 #include "raymath.h"
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
