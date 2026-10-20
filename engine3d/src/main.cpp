@@ -30,7 +30,7 @@ static Mesh uploadBatch(const Batch& b){
  std::copy(b.vertices.begin(),b.vertices.end(),m.vertices);std::copy(b.uvs.begin(),b.uvs.end(),m.texcoords);std::copy(b.normals.begin(),b.normals.end(),m.normals);std::copy(b.indices.begin(),b.indices.end(),m.indices);UploadMesh(&m,false);return m;
 }
 class OriginalMap3DEngine{
- json map;std::vector<Tileset> tilesets;std::vector<LayerMesh> rendered;std::vector<Vector3> collisionCells;int mapW=79,mapH=92;
+ json map;std::vector<Tileset> tilesets;std::vector<LayerMesh> rendered;std::vector<Vector3> collisionCells,wallBlocks;int mapW=79,mapH=92;
  Camera3D camera{};Vector3 player{8*TILE,12,8*TILE};float yaw=0,pitch=0.78f,cameraDistance=430;bool ok=false;
  int findTileset(uint32_t gid)const{for(int i=(int)tilesets.size()-1;i>=0;i--)if((int)gid>=tilesets[i].firstGid)return i;return -1;}
  void collectLayers(const json& layers,const std::string& parent,bool parentVisible){
@@ -39,7 +39,7 @@ class OriginalMap3DEngine{
    const auto& data=l["data"];const int w=l.value("width",mapW),h=l.value("height",mapH);const bool wall=full.find("Wall")!=std::string::npos||full.find("wall")!=std::string::npos;const bool collision=name=="collisions",start=name=="start";std::map<int,Batch> batches;
    for(int idx=0;idx<(int)data.size()&&idx<w*h;idx++){uint32_t raw=0;try{raw=data[idx].get<uint32_t>();}catch(...){continue;}const uint32_t gid=raw&GID_MASK;const int tx=idx%w,ty=idx/w;
     if(collision&&gid)collisionCells.push_back({(tx+.5f)*TILE,0,(ty+.5f)*TILE});if(start&&gid)player={(tx+.5f)*TILE,12,(ty+.5f)*TILE};if(!gid||collision||start)continue;
-    const int ti=findTileset(gid);if(ti<0||!tilesets[ti].texture.id)continue;const auto& ts=tilesets[ti];const int local=(int)gid-ts.firstGid,sx=(local%ts.columns)*ts.tileW,sy=(local/ts.columns)*ts.tileH;
+    if(wall)wallBlocks.push_back({(tx+.5f)*TILE,TILE*.5f,ty*TILE-2.0f});const int ti=findTileset(gid);if(ti<0||!tilesets[ti].texture.id)continue;const auto& ts=tilesets[ti];const int local=(int)gid-ts.firstGid,sx=(local%ts.columns)*ts.tileW,sy=(local/ts.columns)*ts.tileH;
     const float u0=(float)sx/ts.imageW,v0=(float)sy/ts.imageH,u1=(float)(sx+ts.tileW)/ts.imageW,v1=(float)(sy+ts.tileH)/ts.imageH;
     Vector2 uv[4]={{u0,v1},{u1,v1},{u1,v0},{u0,v0}};
     if(raw&FLIP_H){std::swap(uv[0],uv[1]);std::swap(uv[3],uv[2]);}if(raw&FLIP_V){std::swap(uv[0],uv[3]);std::swap(uv[1],uv[2]);}if(raw&FLIP_D){std::swap(uv[0],uv[2]);std::swap(uv[1],uv[3]);}
@@ -60,7 +60,7 @@ public:
   while(!WindowShouldClose()){float dt=GetFrameTime();yaw-=GetMouseDelta().x*.0025f;pitch=Clamp(pitch-GetMouseDelta().y*.0025f,.12f,1.35f);cameraDistance=Clamp(cameraDistance-GetMouseWheelMove()*24,150,1000);
    Vector3 f={-sinf(yaw),0,-cosf(yaw)},r={cosf(yaw),0,-sinf(yaw)},d={0,0,0};if(IsKeyDown(KEY_W)||IsKeyDown(KEY_UP))d=Vector3Add(d,f);if(IsKeyDown(KEY_S)||IsKeyDown(KEY_DOWN))d=Vector3Subtract(d,f);if(IsKeyDown(KEY_D)||IsKeyDown(KEY_RIGHT))d=Vector3Add(d,r);if(IsKeyDown(KEY_A)||IsKeyDown(KEY_LEFT))d=Vector3Subtract(d,r);
    if(Vector3Length(d)>0){d=Vector3Scale(Vector3Normalize(d),120*dt);Vector3 next=Vector3Add(player,d);bool hit=false;for(const auto& c:collisionCells)if(fabsf(next.x-c.x)<TILE*.42f&&fabsf(next.z-c.z)<TILE*.42f){hit=true;break;}if(!hit)player=next;}updateCamera();
-   BeginDrawing();ClearBackground(Color{22,29,39,255});BeginMode3D(camera);DrawPlane({mapW*TILE*.5f,-1,(mapH*TILE)*.5f},{mapW*TILE,mapH*TILE},Color{87,116,77,255});for(const auto& lm:rendered)if(lm.valid)DrawMesh(lm.mesh,lm.material,MatrixIdentity());DrawCapsule({player.x,2,player.z},{player.x,23,player.z},7,8,8,Color{245,188,70,255});EndMode3D();
+   BeginDrawing();ClearBackground(Color{22,29,39,255});BeginMode3D(camera);DrawPlane({mapW*TILE*.5f,-1,(mapH*TILE)*.5f},{mapW*TILE,mapH*TILE},Color{87,116,77,255});for(const auto& b:wallBlocks)DrawCubeV(b,{TILE,TILE,4.0f},Color{78,83,88,255});for(const auto& lm:rendered)if(lm.valid)DrawMesh(lm.mesh,lm.material,MatrixIdentity());DrawCapsule({player.x,2,player.z},{player.x,23,player.z},7,8,8,Color{245,188,70,255});EndMode3D();
    DrawRectangle(12,12,490,70,Color{0,0,0,160});DrawText("YALLA ORIGINAL MAP - NATIVE 3D ENGINE",24,22,18,RAYWHITE);DrawText("WASD/Arrows move | Mouse orbit | Wheel zoom | ESC exit",24,48,13,Color{220,230,235,255});DrawFPS(GetScreenWidth()-90,15);EndDrawing();}
   for(auto& lm:rendered){if(lm.valid)UnloadMesh(lm.mesh);UnloadMaterial(lm.material);}for(auto& t:tilesets)if(t.texture.id)UnloadTexture(t.texture);CloseWindow();
  }
