@@ -1,56 +1,45 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Great Place to Work — 3D Preview</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Great Place to Work — Original TMJ in 3D</title>
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101a20;font:14px system-ui,sans-serif}canvas{display:block;width:100%;height:100%;touch-action:none}#hud{position:fixed;top:12px;left:12px;z-index:2;color:#fff;background:#14252ddd;border:1px solid #ffffff24;border-radius:14px;padding:10px 13px;max-width:calc(100vw - 24px);backdrop-filter:blur(8px)}#hud strong{display:block;font-size:15px}#hud span{opacity:.78;font-size:12px}#help{position:fixed;right:12px;top:12px;z-index:2;color:#fff;background:#14252dcc;border-radius:12px;padding:9px 12px;font-size:12px;max-width:190px}#pad{position:fixed;bottom:20px;left:20px;width:124px;height:124px;border-radius:50%;background:#ffffff20;border:1px solid #ffffff60;z-index:3;touch-action:none;display:none}#nub{position:absolute;width:48px;height:48px;left:37px;top:37px;border-radius:50%;background:#ffffffa8;border:1px solid #fff}#reset{position:fixed;right:14px;bottom:18px;z-index:3;border:0;border-radius:12px;padding:11px 14px;color:white;background:#236b60;font-weight:700}#status{position:fixed;left:12px;bottom:12px;color:#fff9;font-size:11px;z-index:2}@media(pointer:coarse){#pad{display:block}#help{top:auto;bottom:22px;right:12px;max-width:150px}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17232b;font:14px system-ui,sans-serif}canvas{display:block;width:100%;height:100%;touch-action:none}#hud,#help{position:fixed;z-index:2;color:#fff;background:#14252ddd;border:1px solid #ffffff24;border-radius:12px;padding:10px 13px;backdrop-filter:blur(8px)}#hud{top:12px;left:12px;max-width:calc(100vw - 24px)}#hud strong{display:block;font-size:15px}#hud span{font-size:12px;opacity:.8}#help{top:12px;right:12px;font-size:12px}#pad{position:fixed;bottom:20px;left:20px;width:124px;height:124px;border-radius:50%;background:#ffffff20;border:1px solid #ffffff60;z-index:3;touch-action:none;display:none}#nub{position:absolute;width:48px;height:48px;left:37px;top:37px;border-radius:50%;background:#ffffffa8;border:1px solid #fff}#reset{position:fixed;right:14px;bottom:18px;z-index:3;border:0;border-radius:12px;padding:11px 14px;color:white;background:#236b60;font-weight:700}#status{position:fixed;left:12px;bottom:12px;color:white;background:#14252dcc;padding:7px 10px;border-radius:8px;font-size:11px;z-index:2;max-width:70vw}@media(pointer:coarse){#pad{display:block}#help{top:auto;bottom:22px;right:12px;max-width:150px}}
 </style>
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
-</head>
-<body>
-<div id="hud"><strong>Great Place to Work · 3D</strong><span>Independent 3D preview — original TMJ map is unchanged</span></div>
-<div id="help">Move: WASD / arrow keys<br>Drag to rotate view · scroll to zoom</div>
-<div id="pad"><div id="nub"></div></div><button id="reset">Reset view</button><div id="status">Loading map preview…</div>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script></head>
+<body><div id="hud"><strong>Great Place to Work · 3D</strong><span>Rendering the real great-place-to-work.tmj layers</span></div><div id="help">Move: WASD / arrows<br>Drag to rotate · scroll to zoom</div><div id="pad"><div id="nub"></div></div><button id="reset">Reset view</button><div id="status">Loading original TMJ and tilesets…</div>
 <script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-const W=79,D=92;
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bc6d3);scene.fog=new THREE.Fog(0x9bc6d3,105,230);
-const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,500);camera.position.set(68,70,92);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
-const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(W/2,0,D/2);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.48;controls.minDistance=24;controls.maxDistance=170;
-scene.add(new THREE.HemisphereLight(0xe7f8ff,0x526344,2));
-const sun=new THREE.DirectionalLight(0xfff0d4,3);sun.position.set(45,85,35);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
-const groundMat=new THREE.MeshStandardMaterial({color:0x829c75,roughness:1});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(W,D),groundMat);ground.rotation.x=-Math.PI/2;ground.position.set(W/2,-.08,D/2);ground.receiveShadow=true;scene.add(ground);
-const status=document.querySelector('#status');
-new THREE.TextureLoader().load('./map.png',tex=>{tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();ground.material=new THREE.MeshStandardMaterial({map:tex,roughness:1});status.textContent='Loaded map.png · 79 × 92 tile layout';},undefined,()=>{status.textContent='map.png not found — showing 3D placeholder ground';});
-const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.88});
-const palette=[0xd8c8a7,0xc9d2d6,0xe2d5b9,0xc7b4a1,0x9bb5bd];
-function building(x,z,w,d,h,color,roof=0x596a70){
- const group=new THREE.Group();group.position.set(x,0,z);
- const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));body.position.y=h/2;body.castShadow=true;body.receiveShadow=true;group.add(body);
- const top=new THREE.Mesh(new THREE.BoxGeometry(w+.25,.35,d+.25),mat(roof));top.position.y=h+.17;top.castShadow=true;group.add(top);
- const door=new THREE.Mesh(new THREE.BoxGeometry(Math.min(.8,w*.18),Math.min(1.7,h*.5),.08),mat(0x4a4137));door.position.set(0,Math.min(1.7,h*.5)/2,.5*d+.045);group.add(door);
- const cols=Math.max(1,Math.floor(w/1.8)),rows=Math.max(1,Math.floor(h/1.8));
- for(let r=1;r<=rows;r++)for(let c=0;c<cols;c++){let win=new THREE.Mesh(new THREE.BoxGeometry(.45,.5,.07),mat(0x7fc4d4));win.position.set((c-(cols-1)/2)*(w/(cols+.2)),r*(h/(rows+1)),d/2+.05);group.add(win);}
- scene.add(group);return group;
+import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const TILE=32;let W=79,D=92;const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bc6d3);scene.fog=new THREE.Fog(0x9bc6d3,110,260);
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,700);camera.position.set(86,95,115);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(W/2,0,D/2);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=18;controls.maxDistance=210;
+scene.add(new THREE.HemisphereLight(0xe7f8ff,0x58634a,2.1));const sun=new THREE.DirectionalLight(0xfff0d8,2.5);sun.position.set(40,100,35);sun.castShadow=true;scene.add(sun);
+const status=document.querySelector('#status');const mapGroup=new THREE.Group();scene.add(mapGroup);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(W,D),new THREE.MeshStandardMaterial({color:0x8aab78,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.set(W/2,-.16,D/2);floor.receiveShadow=true;scene.add(floor);
+let player;const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function flatten(layers,out=[],parent=''){for(const l of layers||[]){const name=parent+'/'+l.name;if(l.type==='tilelayer'&&l.data)out.push({...l,_name:name});if(l.layers)flatten(l.layers,out,name)}return out}
+function loadImage(url){return new Promise((resolve,reject)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Cannot load '+url));im.src=url})}
+function layerTexture(layer,tilesets,images,tw,th){
+ const c=document.createElement('canvas');c.width=W*TILE;c.height=D*TILE;const ctx=c.getContext('2d');
+ for(let i=0;i<layer.data.length;i++){let gid=layer.data[i]>>>0;if(!gid)continue;const flipH=(gid&0x80000000)!==0,flipV=(gid&0x40000000)!==0,flipD=(gid&0x20000000)!==0;gid=gid&0x1fffffff;
+ let ts=null;for(const t of tilesets){if(t.firstgid<=gid)ts=t;else break}if(!ts||!images[ts.firstgid])continue;
+ const local=gid-ts.firstgid,cols=ts.columns||Math.floor(ts.imagewidth/TILE),sx=(local%cols)*TILE,sy=Math.floor(local/cols)*TILE;
+ const dx=(i%W)*TILE,dy=Math.floor(i/W)*TILE;ctx.save();ctx.translate(dx+TILE/2,dy+TILE/2);if(flipD)ctx.rotate(Math.PI/2);ctx.scale(flipH?-1:1,flipV?-1:1);ctx.drawImage(images[ts.firstgid],sx,sy,TILE,TILE,-TILE/2,-TILE/2,TILE,TILE);ctx.restore();
+ }
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.magFilter=THREE.NearestFilter;tex.minFilter=THREE.LinearMipmapLinearFilter;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex
 }
-// Lightweight architectural placeholders give the flat source map a 3D sense of scale.
-building(18,20,9,7,6,palette[0]);building(31,19,7,9,9,palette[1]);building(45,22,10,7,5,palette[2]);building(59,19,8,10,8,palette[3]);
-building(17,38,8,8,7,palette[1]);building(31,40,10,7,5,palette[2]);building(47,39,8,9,8,palette[0]);building(61,42,9,7,6,palette[4]);
-building(23,61,10,8,8,palette[3]);building(40,62,8,10,6,palette[0]);building(57,64,10,8,9,palette[1]);
-const treeMat=mat(0x477e4b),trunkMat=mat(0x76513b);
-for(let i=0;i<55;i++){const x=3+(i*17%73),z=4+(i*29%84);if((x>13&&x<68&&z>15&&z<70)&&i%3!==0)continue;const tree=new THREE.Group();tree.position.set(x,0,z);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.14,.22,1.4,6),trunkMat);trunk.position.y=.7;trunk.castShadow=true;tree.add(trunk);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(.75+(i%3)*.15,1),treeMat);crown.position.y=1.8;crown.castShadow=true;tree.add(crown);scene.add(tree);}
-const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.75,4,8),mat(0x2878cf));body.position.y=.8;body.castShadow=true;player.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.29,12,10),mat(0xf0c49c));head.position.y=1.55;head.castShadow=true;player.add(head);const marker=new THREE.Mesh(new THREE.ConeGeometry(.22,.45,8),mat(0xf3c94c));marker.position.set(0,2.05,0);marker.rotation.x=Math.PI;player.add(marker);player.position.set(W/2,0,D/2);scene.add(player);
-const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault();});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-let joy={x:0,y:0},drag=false;const pad=document.querySelector('#pad'),nub=document.querySelector('#nub');function joyMove(e){const r=pad.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy),max=38;if(len>max){dx=dx/len*max;dy=dy/len*max;}joy.x=dx/max;joy.y=dy/max;nub.style.transform=`translate(${dx}px,${dy}px)`;}
-pad.addEventListener('pointerdown',e=>{drag=true;pad.setPointerCapture(e.pointerId);joyMove(e)});pad.addEventListener('pointermove',e=>{if(drag)joyMove(e)});function stopJoy(){drag=false;joy={x:0,y:0};nub.style.transform='translate(0,0)'}pad.addEventListener('pointerup',stopJoy);pad.addEventListener('pointercancel',stopJoy);
-document.querySelector('#reset').onclick=()=>{camera.position.set(68,70,92);controls.target.set(W/2,0,D/2);controls.update();};
+async function buildOriginalMap(){
+ const response=await fetch('./great-place-to-work.tmj');if(!response.ok)throw Error('TMJ load failed ('+response.status+')');const tmj=await response.json();W=tmj.width;D=tmj.height;
+ floor.geometry.dispose();floor.geometry=new THREE.PlaneGeometry(W,D);floor.position.set(W/2,-.16,D/2);
+ const ts=tmj.tilesets.slice().sort((a,b)=>a.firstgid-b.firstgid);const imgs={};
+ await Promise.all(ts.map(async t=>{const url=t.source?'./'+t.source.replace(/^\.\//,''):'./'+t.image.replace(/^\.\//,'');try{imgs[t.firstgid]=await loadImage(url)}catch(e){console.warn(e.message)}}));
+ const layers=flatten(tmj.layers);let rendered=0;let y=0.005;
+ for(const layer of layers){if(!layer.data||!layer.data.some(v=>v!==0))continue;const tex=layerTexture(layer,ts,imgs);const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,alphaTest:.025,side:THREE.DoubleSide,depthWrite:false});const mesh=new THREE.Mesh(new THREE.PlaneGeometry(W,D),mat);mesh.rotation.x=-Math.PI/2;mesh.position.set(W/2,y,D/2);mesh.renderOrder=rendered+1;mesh.userData.layer=layer._name;mapGroup.add(mesh);y+=.012;rendered++}
+ // Collision overlay is intentionally not drawn; it is gameplay metadata, not artwork.
+ player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.9,4,8),new THREE.MeshStandardMaterial({color:0xf4b544}));body.position.y=.85;body.castShadow=true;player.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.31,16,12),new THREE.MeshStandardMaterial({color:0xffd2a1}));head.position.y=1.62;player.add(head);const marker=new THREE.Mesh(new THREE.ConeGeometry(.18,.35,12),new THREE.MeshStandardMaterial({color:0x37b8ff}));marker.position.set(0,2,.0);player.add(marker);player.position.set(W/2,0,D/2);scene.add(player);
+ controls.target.set(W/2,0,D/2);status.textContent='Loaded original TMJ: '+W+'×'+D+' tiles · '+rendered+' artwork layers · '+ts.length+' tilesets';
+}
+buildOriginalMap().catch(e=>{console.error(e);status.textContent='Map loading error: '+e.message+' — check TMJ asset paths';});
+let joy={x:0,y:0},drag=false;const pad=document.querySelector('#pad'),nub=document.querySelector('#nub');function joyMove(e){const r=pad.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let x=(e.clientX-cx)/42,y=(e.clientY-cy)/42,l=Math.hypot(x,y);if(l>1){x/=l;y/=l}joy={x,y};nub.style.transform='translate('+x*38+'px,'+y*38+'px)'}pad.addEventListener('pointerdown',e=>{drag=true;pad.setPointerCapture(e.pointerId);joyMove(e)});pad.addEventListener('pointermove',e=>{if(drag)joyMove(e)});function stopJoy(){drag=false;joy={x:0,y:0};nub.style.transform='translate(0,0)'}pad.addEventListener('pointerup',stopJoy);pad.addEventListener('pointercancel',stopJoy);
+document.querySelector('#reset').onclick=()=>{camera.position.set(W*.9,D*1.03,D*1.25);controls.target.set(W/2,0,D/2);controls.update()};
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-const clock=new THREE.Clock();
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);let x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;let z=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;const len=Math.hypot(x,z);if(len>.08){x/=Math.max(1,len);z/=Math.max(1,len);player.position.x=THREE.MathUtils.clamp(player.position.x+x*dt*9,1,W-1);player.position.z=THREE.MathUtils.clamp(player.position.z+z*dt*9,1,D-1);player.rotation.y=Math.atan2(x,z);controls.target.lerp(new THREE.Vector3(player.position.x,0,player.position.z),.035);}controls.update();renderer.render(scene,camera);}animate();
-</script>
-</body></html>
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(player){let x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x,z=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;const len=Math.hypot(x,z);if(len>.08){x/=Math.max(1,len);z/=Math.max(1,len);player.position.x=THREE.MathUtils.clamp(player.position.x+x*dt*8,1,W-1);player.position.z=THREE.MathUtils.clamp(player.position.z+z*dt*8,1,D-1);player.rotation.y=Math.atan2(x,z);controls.target.lerp(new THREE.Vector3(player.position.x,0,player.position.z),.035)}}controls.update();renderer.render(scene,camera)}animate();
+</script></body></html>
