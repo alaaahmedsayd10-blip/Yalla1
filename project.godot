@@ -1,0 +1,12 @@
+[application]
+config/name="Yalla Original Map 3D"
+run/main_scene="res://godot3d/Main.tscn"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
